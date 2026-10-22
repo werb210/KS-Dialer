@@ -1,0 +1,57 @@
+import Foundation
+#if canImport(WidgetKit)
+import WidgetKit
+#endif
+
+struct WidgetContact: Codable, Equatable {
+    let name: String
+    let number: String
+}
+
+struct WidgetSnapshot: Codable, Equatable {
+    let contacts: [WidgetContact]
+    let updatedAt: Date
+}
+
+enum WidgetSnapshotStore {
+    // KEYSTONE_CONFIG_v1 - from KS_APP_GROUP in Config/Keystone.xcconfig, via each target's Info.plist.
+    static let appGroup = (Bundle.main.object(forInfoDictionaryKey: "KSAppGroupIdentifier") as? String) ?? "group.com.keystone.dialer"
+    private static let snapshotKey = "widget.recentContacts.v1"
+
+    static func load() -> WidgetSnapshot {
+        guard let defaults = UserDefaults(suiteName: appGroup),
+              let data = defaults.data(forKey: snapshotKey),
+              let snapshot = try? JSONDecoder().decode(WidgetSnapshot.self, from: data) else {
+            return WidgetSnapshot(contacts: [], updatedAt: .distantPast)
+        }
+        return snapshot
+    }
+
+    /// Rewrites the last snapshot when the app enters the foreground. This is
+    /// deliberately local-only: opening the app never triggers a widget fetch.
+    static func refreshStoredSnapshot() {
+        save(load().contacts)
+    }
+
+    /// BOREAL_DIALER_LOGOUT_CLEAR_v789 - sign-out leaves no contacts on the widget.
+    static func clear() {
+        UserDefaults(suiteName: appGroup)?.removeObject(forKey: snapshotKey)
+#if canImport(WidgetKit)
+        WidgetCenter.shared.reloadTimelines(ofKind: "KSDialerWidget")
+#endif
+    }
+
+    static func save(_ contacts: [WidgetContact]) {
+        // BOREAL_DIALER_WIDGET_DEDUPE_v677 - one row per number: two calls with the same person
+        // showed them twice ("Lorne Benjamin" x2). Keeps the most recent, in order.
+        var seen = Set<String>()
+        let unique = contacts.filter { contact in seen.insert(contact.number.filter { $0.isNumber }).inserted }
+        let snapshot = WidgetSnapshot(contacts: Array(unique.prefix(3)), updatedAt: Date())
+        guard let defaults = UserDefaults(suiteName: appGroup),
+              let data = try? JSONEncoder().encode(snapshot) else { return }
+        defaults.set(data, forKey: snapshotKey)
+#if canImport(WidgetKit)
+        WidgetCenter.shared.reloadTimelines(ofKind: "KSDialerWidget")
+#endif
+    }
+}

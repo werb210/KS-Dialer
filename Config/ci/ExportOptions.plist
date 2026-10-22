@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- v815_IOS_UPLOAD - export settings for .github/workflows/ios-upload.yml: sign with the team and upload straight
+     to App Store Connect. KEYSTONE_CONFIG_v1 - teamID is left empty here; the workflow fills it in from
+     DEVELOPMENT_TEAM in Config/Keystone.xcconfig. -->
+<plist version="1.0">
+<dict>
+	<key>method</key>
+	<string>app-store-connect</string>
+	<key>destination</key>
+	<string>upload</string>
+	<key>teamID</key>
+	<string></string>
+	<key>signingStyle</key>
+	<string>automatic</string>
+	<key>manageAppVersionAndBuildNumber</key>
+	<false/>
+	<key>uploadSymbols</key>
+	<true/>
+</dict>
+</plist>
