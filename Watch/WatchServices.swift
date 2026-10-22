@@ -18,7 +18,7 @@ enum WatchServiceError: Error, Equatable {
         case .server(let code, let message):
             // BOREAL_DIALER_v820_WATCH - say how to fix it, not just what is missing.
             return code == "callback_not_verified"
-                ? "Your cell number isn't verified yet. Sign in to the dialer on your iPhone with the text code sent to your cell, then try again."
+                ? "Your cell number isn't verified yet. Sign in to the dialer app on your iPhone with the text code sent to your cell, then try again."
                 : (message.isEmpty ? "The server could not complete the request." : message)
         case .companionRefused(let reason): return WatchPhoneCallReply.message(for: reason)
         case .companionUnavailable: return "Your iPhone isn't reachable"
