@@ -1,6 +1,6 @@
 # Apple and Twilio release setup
 
-This product has two Apple targets. Preserve the project-defined identifiers: iPhone `com.borealfinancial.dialer` and Watch `com.borealfinancial.dialer.watchkitapp`.
+This product has two Apple targets. Identifiers come from `Config/Keystone.xcconfig`: iPhone `$(KS_APP_BUNDLE_ID)` and Watch `$(KS_APP_BUNDLE_ID).watchkitapp`.
 
 ## iPhone target
 

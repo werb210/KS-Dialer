@@ -1,15 +1,5 @@
 # Brand Logos
 
-Drop brand logos here:
-
-- `boreal_logo.png`
-- `bi_logo.png`
-- `slf_logo.png`
-
-Use 1x transparent PNG or SVG.
-
-These assets are referenced in SwiftUI using:
-
-```swift
-Image("boreal_logo")
-```
+KS-Dialer ships no company logo. Each company's logo comes from the KS-Ops directory (`logo_url`) when staff enter
+their company code, and is shown on the sign-in screen and in Account (`CompanyLogoView`). Without one, a phone glyph
+in the company's `primary_color` (or the neutral default) is shown.

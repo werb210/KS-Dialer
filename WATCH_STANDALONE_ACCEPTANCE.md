@@ -40,11 +40,11 @@ All boxes are intentionally unchecked until performed on a provisioned cellular 
 - [ ] Standalone call request over Wi-Fi
 - [ ] Callback rings cellular Watch
 - [ ] Destination bridge succeeds
-- [ ] Correct Boreal line authorization
+- [ ] Correct line authorization
 - [ ] Correct CRM call log
 - [ ] Failure/cancellation is recoverable; duplicate tap creates one call
 - [ ] Server-reported state is required before showing connected
-- [ ] Incoming Boreal route rings Watch with iPhone powered off
+- [ ] Incoming company route rings Watch with iPhone powered off
 
 ## Companion optimization
 - [ ] iPhone incoming Twilio call appears on Watch
