@@ -25,7 +25,7 @@ final class KeychainService {
 
     /// Accounts this service writes, migrated to the current accessibility on launch.
     static let knownAccounts = ["token"]
-    private static let migrationKey = "boreal.keychain.accessibility.v789"
+    private static let migrationKey = "keystone.keychain.accessibility.v789"
 
     func save(_ value: String, for key: String) {
         saveData(Data(value.utf8), for: key)
@@ -133,7 +133,7 @@ final class KeychainService {
         if complete { defaults.set(true, forKey: Self.migrationKey) }
     }
 
-    private static let logger = Logger(subsystem: "financial.boreal.dialer", category: "keychain")
+    private static let logger = Logger(subsystem: "com.keystone.dialer", category: "keychain")
 
     private static func log(_ operation: String, status: OSStatus, key: String) {
         // Logged in release too: a failed save is a silent sign-out later.

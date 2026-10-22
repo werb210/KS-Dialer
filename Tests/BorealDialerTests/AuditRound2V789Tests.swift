@@ -136,13 +136,14 @@ final class AuditRound2V789Tests: XCTestCase {
     // [186] [189] config and logging
 
     func testTeamSocketIsDerivedFromTheBFBaseURL() {
-        XCTAssertEqual(APIConfig.TEAM_WS_URL, "wss://server.boreal.financial/api/team/ws")
+        KeystoneTestCompany.install() // KEYSTONE_COMPANY_CODE_v1 - the base URL comes from the stored company
+        XCTAssertEqual(APIConfig.TEAM_WS_URL, "wss://ks.example.com/api/team/ws")
         XCTAssertEqual(APIConfig.webSocketURL(fromHTTPBase: "http://localhost:3000/api"), "ws://localhost:3000/api")
     }
 
     func testLoggedURLsNeverCarryQueryStrings() {
-        let url = URL(string: "https://server.boreal.financial/api/communications/sms/thread?phone=%2B14165550123#x")
-        XCTAssertEqual(APIClient.loggableURL(url), "https://server.boreal.financial/api/communications/sms/thread")
+        let url = URL(string: "https://ks.example.com/api/communications/sms/thread?phone=%2B14165550123#x")
+        XCTAssertEqual(APIClient.loggableURL(url), "https://ks.example.com/api/communications/sms/thread")
         XCTAssertEqual(APIClient.loggableURL(nil), "")
     }
 

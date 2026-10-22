@@ -38,7 +38,7 @@ final class NewContactViewModel: ObservableObject {
         if let match = Self.matchCompany(card.company, in: companies) {
             companyId = match.id
         } else {
-            scannedCompanyNote = "Card says \(card.company). It isn't a company in Boreal yet."
+            scannedCompanyNote = "Card says \(card.company). It isn't a company in the CRM yet."
         }
     }
 

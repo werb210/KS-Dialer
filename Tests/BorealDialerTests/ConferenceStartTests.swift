@@ -13,11 +13,11 @@ final class ConferenceStartTests: XCTestCase {
 
     func testPstnStartResponseCarriesTheFriendlyName() throws {
         let json = """
-        {"ok":true,"conferenceId":"cf1","conferenceFriendly":"boreal-cf1",
+        {"ok":true,"conferenceId":"cf1","conferenceFriendly":"ks-cf1",
          "callerParticipantId":"p1","calleeParticipantId":"p2","calleeCallSid":"CA1"}
         """.data(using: .utf8)!
         let decoded = try JSONDecoder().decode(StartResponseMirror.self, from: json)
-        XCTAssertEqual(decoded.conferenceFriendly, "boreal-cf1")
+        XCTAssertEqual(decoded.conferenceFriendly, "ks-cf1")
         XCTAssertEqual(decoded.callerParticipantId, "p1")
     }
 

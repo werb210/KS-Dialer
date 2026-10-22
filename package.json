@@ -1,5 +1,5 @@
 {
-  "name": "boreal-dialer-ios",
+  "name": "ks-dialer",
   "private": true,
   "scripts": {
     "build": "echo \"iOS build requires macOS\"",

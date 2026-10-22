@@ -110,7 +110,7 @@ public struct QuickReplyCache {
     public let defaults: UserDefaults
     public let key: String
 
-    public init(defaults: UserDefaults = .standard, key: String = "boreal.quickReplies.sms.v821") {
+    public init(defaults: UserDefaults = .standard, key: String = "keystone.quickReplies.sms.v821") {
         self.defaults = defaults
         self.key = key
     }

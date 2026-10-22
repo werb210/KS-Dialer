@@ -103,7 +103,7 @@ enum StaffBriefing {
     }
 
     static func followUpAction(_ followUp: NextFollowUp) -> FollowUpAction {
-        guard followUp.found else { return .explain("You have no follow-ups due in Boreal.") }
+        guard followUp.found else { return .explain("You have no follow-ups due.") }
         let who = clean(followUp.contactName) ?? "your next follow-up"
         guard let phone = BorealClientLookup.e164(followUp.phone) else {
             return .explain("Your next follow-up is \(who), but there's no phone number on file.")
@@ -124,7 +124,7 @@ enum StaffBriefing {
             return "\(who) said: \(trimmedPreview(preview))"
         }
         var parts = [header] + spoken
-        if messages.count > spokenLimit { parts.append("And \(messages.count - spokenLimit) more in Boreal Dialer.") }
+        if messages.count > spokenLimit { parts.append("And \(messages.count - spokenLimit) more in the dialer.") }
         return parts.joined(separator: " ")
     }
 
@@ -201,20 +201,20 @@ enum StaffBriefing {
 @available(iOS 16.0, *)
 struct CallNextFollowUpIntent: AppIntent {
     static var title: LocalizedStringResource = "Call My Next Follow-up"
-    static var description = IntentDescription("Calls the client on your next Boreal follow-up task from your Boreal line.")
+    static var description = IntentDescription("Calls the client on your next follow-up task from your office line.")
     // See the header: a VoIP/CallKit call has to be started by the app in the foreground.
     static var openAppWhenRun: Bool = true
 
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
         guard TokenStorage.shared.getToken() != nil else {
-            return .result(dialog: "Open Boreal Dialer and sign in first.")
+            return .result(dialog: "Open the dialer app and sign in first.")
         }
         let followUp: NextFollowUp
         do {
             followUp = try await StaffBriefing.fetchNextFollowUp()
         } catch {
-            return .result(dialog: "I couldn't reach Boreal right now.")
+            return .result(dialog: "I couldn't reach the server right now.")
         }
         switch StaffBriefing.followUpAction(followUp) {
         case .explain(let text):
@@ -231,17 +231,17 @@ struct CallNextFollowUpIntent: AppIntent {
 @available(iOS 16.0, *)
 struct ReadMissedClientMessagesIntent: AppIntent {
     static var title: LocalizedStringResource = "Read My Missed Client Messages"
-    static var description = IntentDescription("Reads your unread client texts and portal messages from Boreal.")
+    static var description = IntentDescription("Reads your unread client texts and portal messages.")
 
     func perform() async throws -> some IntentResult & ProvidesDialog {
         guard TokenStorage.shared.getToken() != nil else {
-            return .result(dialog: "Open Boreal Dialer and sign in first.")
+            return .result(dialog: "Open the dialer app and sign in first.")
         }
         do {
             let summary = try await StaffBriefing.fetchMissedSummary()
             return .result(dialog: "\(StaffBriefing.messagesDialog(summary))")
         } catch {
-            return .result(dialog: "I couldn't reach Boreal right now.")
+            return .result(dialog: "I couldn't reach the server right now.")
         }
     }
 }
@@ -249,17 +249,17 @@ struct ReadMissedClientMessagesIntent: AppIntent {
 @available(iOS 16.0, *)
 struct WhoCalledMeIntent: AppIntent {
     static var title: LocalizedStringResource = "Who Called Me"
-    static var description = IntentDescription("Tells you who you missed calls from in Boreal.")
+    static var description = IntentDescription("Tells you who you missed calls from.")
 
     func perform() async throws -> some IntentResult & ProvidesDialog {
         guard TokenStorage.shared.getToken() != nil else {
-            return .result(dialog: "Open Boreal Dialer and sign in first.")
+            return .result(dialog: "Open the dialer app and sign in first.")
         }
         do {
             let summary = try await StaffBriefing.fetchMissedSummary()
             return .result(dialog: "\(StaffBriefing.callersDialog(summary))")
         } catch {
-            return .result(dialog: "I couldn't reach Boreal right now.")
+            return .result(dialog: "I couldn't reach the server right now.")
         }
     }
 }

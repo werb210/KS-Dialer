@@ -1,17 +1,15 @@
 import Foundation
 
 struct APIConfig {
-    static let BASE_URL = "https://server.boreal.financial/api"
+    // KEYSTONE_COMPANY_CODE_v1 - every request goes to the signed-in company's own KS-server: {server_url}/api from
+    // the KS-Ops directory, kept by CompanyStore. Before a company is chosen the app only shows the company-code
+    // screen; the placeholder below is an unroutable host so nothing can reach a real server by accident.
+    static let unconfiguredBaseURL = "https://company-not-set.invalid/api"
 
-    // BOREAL_DIALER_BI_CONTACTS_v51
-    // BI is NOT a silo of BF-Server's data - it is a separate deployment with
-    // its own database. Only the BI CRM read paths use this; calling, SMS,
-    // messages, team and calendar all stay on BASE_URL for every silo. This is
-    // the same host the staff portal falls back to in src/config/api.ts.
-    static let BI_BASE_URL = "https://bi-server-cse0apamgkheb9d5.canadacentral-01.azurewebsites.net/api"
+    static var BASE_URL: String { CompanyStore.apiBaseURL ?? unconfiguredBaseURL }
 
     // BOREAL_DIALER_TEAM_WS_CONFIG_v789 - the team chat websocket lives on the
-    // BF server; derived here so a host change is made in one place.
+    // same server; derived here so a host change is made in one place.
     static var TEAM_WS_URL: String { webSocketURL(fromHTTPBase: BASE_URL) + "/team/ws" }
 
     /// https://host/api -> wss://host/api, http -> ws.
@@ -21,7 +19,7 @@ struct APIConfig {
         return base
     }
 
-    // All silos use the same server — silo is sent as X-Silo header
+    // Keystone has a single line. KS-server still reads X-Silo, so requests keep sending "BF".
     static var activeBaseURL: String = BASE_URL
     static var activeSilo: Silo = .bf
 

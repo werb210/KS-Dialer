@@ -1,3 +1,4 @@
+import Combine
 import SwiftUI
 
 struct LoginView: View {
@@ -15,9 +16,12 @@ struct LoginView: View {
     private enum Field { case phone, code }
     @FocusState private var focused: Field?
 
-    // BOREAL_DIALER_LOGIN_STYLE_v26 - brand palette (navy field, gold + green accents)
-    private let navy = Color(red: 0.043, green: 0.122, blue: 0.227)
-    private let gold = Color(red: 0.784, green: 0.635, blue: 0.294)
+    // KEYSTONE_COMPANY_CODE_v1 - the company this phone signs in to; nil shows the company-code screen first.
+    @State private var company: CompanyProfile? = CompanyStore.current
+
+    // BOREAL_DIALER_LOGIN_STYLE_v26 - neutral navy field; the accent is the company's primary colour when it has one.
+    private let navy = KeystoneBrand.navy
+    private var gold: Color { KeystoneBrand.accent(for: company) }
 
     private func fieldStyle<V: View>(_ v: V) -> some View {
         v.foregroundColor(.white)
@@ -30,7 +34,7 @@ struct LoginView: View {
     // BOREAL_DIALER_v831_DIALER_POLISH - a number that isn't staff is told so, not "That code didn't work".
     nonisolated static func codeErrorMessage(_ error: Error) -> String {
         if case APIError.http(_, let code, _) = error, code == "not_staff" {
-            return APIError.knownCodes["not_staff"] ?? "This number isn't set up as a Boreal staff account."
+            return APIError.knownCodes["not_staff"] ?? "This number isn't set up as a staff account."
         }
         if OfflineQueue.isOffline(error) { return "No signal. Try again when you're back online." }
         return "That code didn't work. Please try again."
@@ -50,18 +54,30 @@ struct LoginView: View {
     }
 
     var body: some View {
+        Group {
+            if company == nil {
+                CompanyCodeView { resolved in company = resolved }
+            } else {
+                signIn
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: CompanyStore.didChange)) { _ in
+            company = CompanyStore.current
+        }
+    }
+
+    private var signIn: some View {
         ZStack {
             navy.ignoresSafeArea()
 
             VStack(spacing: 22) {
                 Spacer()
 
-                Image(systemName: "phone.fill")
-                    .font(.system(size: 44, weight: .semibold))
-                    .foregroundColor(gold)
-                Text("Boreal Dialer")
+                CompanyLogoView(company: company, size: 64)
+                Text(company?.companyName ?? "Dialer")
                     .font(.system(size: 30, weight: .bold))
                     .foregroundColor(.white)
+                    .multilineTextAlignment(.center)
                 Text("Sign in with your work number")
                     .font(.subheadline)
                     .foregroundColor(.white.opacity(0.6))
@@ -89,7 +105,7 @@ struct LoginView: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 15)
                             .background(gold)
-                            .foregroundColor(navy)
+                            .foregroundColor(.white)
                             .cornerRadius(12)
                     }
                     .disabled(busy)
@@ -164,6 +180,14 @@ struct LoginView: View {
                         .foregroundColor(.red)
                         .multilineTextAlignment(.center)
                 }
+
+                // KEYSTONE_COMPANY_CODE_v1 - wrong company, or a new one: back to the company code.
+                Button("Not \(company?.companyName ?? "your company")? Change company code") {
+                    CompanyStore.clear()
+                }
+                .font(.footnote)
+                .foregroundColor(.white.opacity(0.6))
+                .disabled(busy)
 
                 Spacer()
             }

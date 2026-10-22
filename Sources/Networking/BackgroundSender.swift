@@ -8,10 +8,10 @@ import Foundation
 // queue to read back the next time the app opens.
 final class BackgroundSender: NSObject, URLSessionTaskDelegate {
     static let shared = BackgroundSender()
-    static let sessionIdentifier = "com.boreal.dialer.background-send"
+    static let sessionIdentifier = "com.keystone.dialer.background-send"
     var systemCompletion: (() -> Void)?
 
-    private let resultsKey = "boreal.dialer.backgroundSend.results"
+    private let resultsKey = "keystone.dialer.backgroundSend.results"
     private let lock = NSLock()
 
     lazy var session: URLSession = {

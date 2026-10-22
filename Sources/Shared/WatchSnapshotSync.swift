@@ -63,7 +63,7 @@ enum WatchSnapshotSync {
         defaults.set(snapshot.missedCalls, forKey: missedKey)
         defaults.set(snapshot.tasksDue, forKey: tasksKey)
 #if canImport(WidgetKit)
-        WidgetCenter.shared.reloadTimelines(ofKind: "BorealWatchWidget")
+        WidgetCenter.shared.reloadTimelines(ofKind: "KSWatchWidget")
 #endif
     }
 
@@ -86,7 +86,7 @@ enum WatchSnapshotSync {
             defaults.removeObject(forKey: meetingAtKey)
         }
 #if canImport(WidgetKit)
-        WidgetCenter.shared.reloadTimelines(ofKind: "BorealWatchWidget")
+        WidgetCenter.shared.reloadTimelines(ofKind: "KSWatchWidget")
 #endif
     }
 
@@ -98,7 +98,7 @@ enum WatchSnapshotSync {
             defaults.removeObject(forKey: key)
         }
 #if canImport(WidgetKit)
-        WidgetCenter.shared.reloadTimelines(ofKind: "BorealWatchWidget")
+        WidgetCenter.shared.reloadTimelines(ofKind: "KSWatchWidget")
 #endif
     }
 

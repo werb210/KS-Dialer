@@ -209,10 +209,10 @@ struct MessagesView: View {
                     Button {
                         showMaya = true
                     } label: {
-                        HeaderActionLabel(text: "Maya chats")
+                        HeaderActionLabel(text: "Assistant chats")
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("Maya live chats")
+                    .accessibilityLabel("Assistant live chats")
                 }
 
                 ListSearchField(placeholder: "Search by name, phone or email", text: $viewModel.query)
@@ -489,7 +489,7 @@ private struct ThreadBubble: View {
 // An invisible marker placed after the last message in every conversation (SMS, Messages, Team).
 // Screens scroll to it so the newest message is always in view.
 struct ThreadBottom: View {
-    static let id = "boreal-thread-bottom"
+    static let id = "ks-thread-bottom"
     var body: some View {
         Color.clear.frame(height: 1).id(ThreadBottom.id)
     }

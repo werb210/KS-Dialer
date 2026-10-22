@@ -103,7 +103,7 @@ final class MayaSessionsViewModel: ObservableObject {
             let data = try await APIClient.shared.makeAuthorizedRequest(request)
             sessions = TeamLossy.list(MayaSession.self, from: data, keys: ["sessions", "items", "data"])
         } catch {
-            self.error = "Could not load Maya chats."
+            self.error = "Could not load assistant chats."
         }
         loading = false
     }
@@ -130,7 +130,7 @@ struct MayaSessionsView: View {
             if viewModel.loading && viewModel.sessions.isEmpty {
                 ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if viewModel.sessions.isEmpty {
-                Text(viewModel.error ?? "No Maya chats")
+                Text(viewModel.error ?? "No assistant chats")
                     .foregroundColor(.secondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
@@ -161,7 +161,7 @@ struct MayaSessionsView: View {
                 .refreshable { await viewModel.loadSessions() }
             }
         }
-        .navigationTitle("Maya chats")
+        .navigationTitle("Assistant chats")
         .navigationBarTitleDisplayMode(.inline)
         .task { await viewModel.loadSessions() }
     }
@@ -184,7 +184,7 @@ struct MayaSessionDetailView: View {
                     HStack {
                         if !message.fromMaya { Spacer(minLength: 40) }
                         VStack(alignment: message.fromMaya ? .leading : .trailing, spacing: 2) {
-                            Text(message.fromMaya ? "Maya" : session.title)
+                            Text(message.fromMaya ? "Assistant" : session.title)
                                 .font(.caption2)
                                 .foregroundColor(.secondary)
                             Text(message.body)

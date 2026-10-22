@@ -22,10 +22,10 @@ enum CarPlayRows {
     /// CarPlay caps list length per vehicle; 24 is under every car's limit and plenty while driving.
     static let maxRows = 24
 
-    static let signedOutMessage = "Open Boreal Dialer on your iPhone and sign in."
+    static let signedOutMessage = "Open the dialer app on your iPhone and sign in."
     static let noRecentsMessage = "No recent calls"
     static let noVoicemailMessage = "No voicemail"
-    static let noFavouritesMessage = "Tap Favourite on a contact in Boreal Dialer to add it here."
+    static let noFavouritesMessage = "Tap Favourite on a contact in the dialer app to add it here."
 
     static func recents(_ calls: [RecentCall]) -> [CarPlayRow] {
         calls.prefix(maxRows).map { call in

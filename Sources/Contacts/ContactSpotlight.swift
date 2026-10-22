@@ -6,8 +6,8 @@ import UniformTypeIdentifiers
 
 // BOREAL_DIALER_v593_SPOTLIGHT
 enum ContactSpotlight {
-    static let domain = "financial.boreal.dialer.contacts"
-    static let prefix = "boreal.contact|"
+    static let domain = "com.keystone.dialer.contacts"
+    static let prefix = "keystone.contact|"
 
     static func identifier(phone: String, id: String) -> String { prefix + phone + "|" + id }
 
@@ -20,7 +20,7 @@ enum ContactSpotlight {
 
     static func callURL(phone: String) -> URL? {
         var components = URLComponents()
-        components.scheme = "borealdialer"
+        components.scheme = "ksdialer"
         components.host = "call"
         components.queryItems = [URLQueryItem(name: "phone", value: phone), URLQueryItem(name: "start", value: "false")]
         return components.url

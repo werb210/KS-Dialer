@@ -18,11 +18,11 @@ final class CallerResolutionTests: XCTestCase {
 
     func testDecodesAnInternalStaffMatch() throws {
         let json = """
-        {"ok":true,"matched":true,"isStaff":true,"name":"Andrew Polturak","userId":"u1"}
+        {"ok":true,"matched":true,"isStaff":true,"name":"Sam Lee","userId":"u1"}
         """.data(using: .utf8)!
         let resolved = try JSONDecoder().decode(ResolvedCaller.self, from: json)
         XCTAssertEqual(resolved.isStaff, true)
-        XCTAssertEqual(resolved.display, "Andrew Polturak")
+        XCTAssertEqual(resolved.display, "Sam Lee")
         XCTAssertEqual(resolved.userId, "u1")
     }
 

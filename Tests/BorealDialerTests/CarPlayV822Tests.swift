@@ -42,13 +42,13 @@ final class CarPlayRowsV822Tests: XCTestCase {
     }
 
     func testFavouritesAreStarredClientsThenTeammates() throws {
-        let team = try decode([QuickCallStaff].self, #"[{"userId":"u1","name":"Andrew","online":true}]"#)
+        let team = try decode([QuickCallStaff].self, #"[{"userId":"u1","name":"Sam","online":true}]"#)
         let clients = [FavouriteContact(id: "c1", name: "Jane Client", phone: "780-916-7413"),
                        FavouriteContact(id: "c2", name: "No Number", phone: "")]
         let rows = CarPlayRows.favourites(clients: clients, team: team)
-        XCTAssertEqual(rows.map(\.title), ["Jane Client", "Andrew"])
+        XCTAssertEqual(rows.map(\.title), ["Jane Client", "Sam"])
         XCTAssertEqual(rows[0].action, .call(phone: "+17809167413"))
-        XCTAssertEqual(rows[1].action, .callTeammate(userId: "u1", name: "Andrew"))
+        XCTAssertEqual(rows[1].action, .callTeammate(userId: "u1", name: "Sam"))
         XCTAssertEqual(rows[1].detail, "Team · online")
     }
 
@@ -106,7 +106,7 @@ final class CommunicationSenderV822Tests: XCTestCase {
     func testAPortalMessageUsesTheContactHandle() {
         let sender = CommunicationSender.from(userInfo: ["type": "client_message", "contactId": "c9", "senderName": "Jane"],
                                               body: "Statements attached", threadId: "client_message:c9")
-        XCTAssertEqual(sender?.handle, "boreal-contact:c9")
+        XCTAssertEqual(sender?.handle, "ks-contact:c9")
         XCTAssertEqual(sender?.isPhone, false)
         XCTAssertEqual(CommunicationSender.contactId(fromHandle: sender?.handle), "c9")
     }
@@ -128,7 +128,7 @@ final class SiriMessageHandlerV822Tests: XCTestCase {
     }
 
     func testANameOnlyRecipientNeedsALookup() {
-        let person = INPerson(personHandle: INPersonHandle(value: "boreal-contact:c1", type: .unknown), nameComponents: nil,
+        let person = INPerson(personHandle: INPersonHandle(value: "ks-contact:c1", type: .unknown), nameComponents: nil,
                               displayName: "Jane", image: nil, contactIdentifier: nil, customIdentifier: "c1")
         XCTAssertNil(SiriMessageHandler.directTarget(person))
     }

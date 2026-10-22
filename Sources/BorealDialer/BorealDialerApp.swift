@@ -249,7 +249,7 @@ final class AppLockController: ObservableObject {
         guard !authenticating else { return }
         authenticating = true
         errorMessage = nil
-        LAContext().evaluatePolicy(.deviceOwnerAuthentication, localizedReason: "Unlock Boreal Dialer") { success, _ in
+        LAContext().evaluatePolicy(.deviceOwnerAuthentication, localizedReason: "Unlock the dialer") { success, _ in
             Task { @MainActor in
                 AppLockController.shared.finishUnlock(success: success)
             }
@@ -289,7 +289,7 @@ struct AppLockView: View {
                 Image(systemName: "lock.fill")
                     .font(.system(size: 40))
                     .foregroundStyle(Theme.green)
-                Text("Boreal Dialer is locked")
+                Text("The dialer is locked")
                     .font(.title3.weight(.semibold))
                     .foregroundStyle(.white)
                 Button("Unlock") { lock.unlock() }
@@ -327,7 +327,7 @@ enum StartCallActivity {
             else { return nil }
         }
         var components = URLComponents()
-        components.scheme = "borealdialer"
+        components.scheme = "ksdialer"
         components.host = "call"
         components.queryItems = [
             URLQueryItem(name: "phone", value: phone),

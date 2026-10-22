@@ -348,7 +348,7 @@ final class SiriBriefingV821Tests: XCTestCase {
 
     func testFollowUpExplainsWhenItCannotCall() {
         XCTAssertEqual(StaffBriefing.followUpAction(NextFollowUp(found: false)),
-                       .explain("You have no follow-ups due in Boreal."))
+                       .explain("You have no follow-ups due."))
         XCTAssertEqual(StaffBriefing.followUpAction(NextFollowUp(found: true, contactName: "Tanya Voss")),
                        .explain("Your next follow-up is Tanya Voss, but there's no phone number on file."))
     }
@@ -371,7 +371,7 @@ final class SiriBriefingV821Tests: XCTestCase {
         XCTAssertTrue(text.hasPrefix("You have 5 unread client messages."))
         XCTAssertTrue(text.contains("Client 1 said: Hello 1"))
         XCTAssertFalse(text.contains("Client 4 said"))
-        XCTAssertTrue(text.hasSuffix("And 2 more in Boreal Dialer."))
+        XCTAssertTrue(text.hasSuffix("And 2 more in the dialer."))
     }
 
     func testSaysWhoCalled() {

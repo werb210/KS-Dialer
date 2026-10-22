@@ -6,7 +6,9 @@ import UIKit
 @MainActor
 final class CallDirectoryManager: ObservableObject {
     static let shared = CallDirectoryManager()
-    static let extensionIdentifier = "com.borealfinancial.dialer.calldirectory"
+    // KEYSTONE_CONFIG_v1 - $(KS_APP_BUNDLE_ID).calldirectory, from Config/Keystone.xcconfig via the app's Info.plist.
+    static let extensionIdentifier = (Bundle.main.object(forInfoDictionaryKey: "KSCallDirectoryExtensionIdentifier") as? String)
+        ?? "com.keystone.dialer.calldirectory"
 
     @Published private(set) var enabledStatus: CXCallDirectoryManager.EnabledStatus = .unknown
 
@@ -17,7 +19,7 @@ final class CallDirectoryManager: ObservableObject {
     // v831), falling back to the old 200-contact read on an older server. The full list is fetched at most every 6
     // hours (and at sign-in), not on every return to the app.
     nonisolated static let refreshInterval: TimeInterval = 6 * 3600
-    private static let lastRefreshKey = "boreal.dialer.callDirectory.lastRefresh"
+    private static let lastRefreshKey = "keystone.dialer.callDirectory.lastRefresh"
     private var refreshing = false
 
     struct DirectoryEnvelope: Decodable {

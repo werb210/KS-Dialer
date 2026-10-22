@@ -15,7 +15,8 @@ struct BorealWatchEntry: TimelineEntry {
 }
 
 struct BorealWatchProvider: TimelineProvider {
-    private let appGroup = "group.com.borealfinancial.dialer"
+    // KEYSTONE_CONFIG_v1 - from KS_APP_GROUP in Config/Keystone.xcconfig, via this target's Info.plist.
+    private let appGroup = (Bundle.main.object(forInfoDictionaryKey: "KSAppGroupIdentifier") as? String) ?? "group.com.keystone.dialer"
 
     // BOREAL_DIALER_WIDGET_SELF_CONTAINED_v226
     // Read straight from the app group because this target compiles only
@@ -139,10 +140,10 @@ struct BorealWatchWidgetView: View {
 
 struct BorealWatchWidget: Widget {
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: "BorealWatchWidget", provider: BorealWatchProvider()) { entry in
+        StaticConfiguration(kind: "KSWatchWidget", provider: BorealWatchProvider()) { entry in
             BorealWatchWidgetView(entry: entry).borealWidgetBackground()
         }
-        .configurationDisplayName("Boreal")
+        .configurationDisplayName("Dialer")
         .description("Your availability and missed calls.")
         .supportedFamilies([.accessoryCircular, .accessoryInline, .accessoryRectangular])
     }
@@ -160,13 +161,13 @@ extension View {
 /// One tap from the watch face to the dial pad.
 struct BorealDialWidget: Widget {
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: "BorealDialWidget", provider: BorealWatchProvider()) { _ in
+        StaticConfiguration(kind: "KSDialWidget", provider: BorealWatchProvider()) { _ in
             BorealDialWidgetView()
-                .widgetURL(URL(string: "borealwatch://dial"))
+                .widgetURL(URL(string: "kswatch://dial"))
                 .borealWidgetBackground()
         }
-        .configurationDisplayName("Boreal Dial")
-        .description("Open the Boreal dial pad.")
+        .configurationDisplayName("Dial Pad")
+        .description("Open the dial pad.")
         .supportedFamilies([.accessoryCircular, .accessoryCorner])
     }
 }
@@ -186,12 +187,12 @@ struct BorealDialWidgetView: View {
 /// Today's missed calls; tap opens Recent Calls.
 struct BorealMissedWidget: Widget {
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: "BorealMissedWidget", provider: BorealWatchProvider()) { entry in
+        StaticConfiguration(kind: "KSMissedWidget", provider: BorealWatchProvider()) { entry in
             BorealMissedWidgetView(entry: entry)
-                .widgetURL(URL(string: "borealwatch://recents"))
+                .widgetURL(URL(string: "kswatch://recents"))
                 .borealWidgetBackground()
         }
-        .configurationDisplayName("Boreal Missed Calls")
+        .configurationDisplayName("Missed Calls")
         .description("Missed calls today.")
         .supportedFamilies([.accessoryCircular, .accessoryCorner, .accessoryInline])
     }

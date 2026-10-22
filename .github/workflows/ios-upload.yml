@@ -1,8 +1,8 @@
-# BOREAL_DIALER_v815_IOS_UPLOAD - builds the iPhone dialer (with its Apple Watch app and extensions) in the cloud and
+# v815_IOS_UPLOAD - builds the iPhone dialer (with its Apple Watch app and extensions) in the cloud and
 # uploads it to App Store Connect (TestFlight), so no Mac or Xcode is needed. Run it by hand: GitHub > Actions >
-# "Upload iOS build" > Run workflow. It never runs on its own. Signing uses the company Apple account (team
-# 76VAY7UJKJ) through an App Store Connect API key kept in the repo secrets ASC_KEY_ID, ASC_ISSUER_ID and ASC_KEY_P8
-# (the full text of the .p8 file). Each run gets a new build number (1000 + run number) for every target. The build
+# "Upload iOS build" > Run workflow. It never runs on its own. Signing uses the team set as DEVELOPMENT_TEAM in
+# Config/Keystone.xcconfig (KEYSTONE_CONFIG_v1) through an App Store Connect API key kept in the repo secrets
+# ASC_KEY_ID, ASC_ISSUER_ID and ASC_KEY_P8 (the full text of the .p8 file). Each run gets a new build number (1000 + run number) for every target. The build
 # appears in TestFlight after Apple processes it, usually 10-30 minutes.
 name: Upload iOS build
 on:
@@ -39,6 +39,16 @@ jobs:
       - name: Pick the build number (1000 + run number)
         run: echo "BUILD_NUMBER=$((1000 + GITHUB_RUN_NUMBER))" >> "$GITHUB_ENV"
       - uses: actions/checkout@v5
+      # KEYSTONE_CONFIG_v1 - the team comes from Config/Keystone.xcconfig, the one place the app's identity is set.
+      - name: Read the signing team from Config/Keystone.xcconfig
+        run: |
+          team="$(sed -n 's/^DEVELOPMENT_TEAM[[:space:]]*=[[:space:]]*\([A-Z0-9]*\).*/\1/p' Config/Keystone.xcconfig | head -n1)"
+          if [ -z "$team" ]; then
+            echo "::error::Set DEVELOPMENT_TEAM in Config/Keystone.xcconfig (see README, Keystone setup)"
+            exit 1
+          fi
+          echo "TEAM_ID=$team" >> "$GITHUB_ENV"
+          plutil -replace teamID -string "$team" Config/ci/ExportOptions.plist
       - name: Use the newest released Xcode (App Store Connect refuses beta builds)
         uses: maxim-lobanov/setup-xcode@v1
         with:
@@ -53,10 +63,10 @@ jobs:
           mkdir -p "$RUNNER_TEMP/asc"
           printf '%s' "$ASC_KEY_P8" > "$RUNNER_TEMP/asc/AuthKey_${ASC_KEY_ID}.p8"
           chmod 600 "$RUNNER_TEMP/asc/AuthKey_${ASC_KEY_ID}.p8"
-      # BOREAL_v833_CERT_CLEANUP - each cloud run makes Xcode create an "Apple Development" certificate ("Created via
+      # v833_CERT_CLEANUP - each cloud run makes Xcode create an "Apple Development" certificate ("Created via
       # API") and Apple allows only a few, so archiving started failing. This deletes the leftover API-made development
-      # certificates from earlier runs (older than 75 minutes, in any of the three apps) and nothing else: the
-      # Distribution Managed certificate, Andrew Polturak's development certificate and the VoIP certificates are kept.
+      # certificates from earlier runs (older than 75 minutes) and nothing else: the Distribution Managed certificate,
+      # people's own development certificates and the VoIP certificates are kept.
       # It never fails the run.
       - name: Delete leftover cloud development certificates
         continue-on-error: true
@@ -73,7 +83,7 @@ jobs:
           -authenticationKeyPath "$RUNNER_TEMP/asc/AuthKey_${ASC_KEY_ID}.p8"
           -authenticationKeyID "$ASC_KEY_ID"
           -authenticationKeyIssuerID "$ASC_ISSUER_ID"
-          DEVELOPMENT_TEAM=76VAY7UJKJ
+          DEVELOPMENT_TEAM="$TEAM_ID"
           CODE_SIGN_STYLE=Automatic
           CURRENT_PROJECT_VERSION="$BUILD_NUMBER"
       - name: Upload to App Store Connect
@@ -93,7 +103,7 @@ jobs:
         run: |
           {
             echo "### Uploaded to App Store Connect (TestFlight)"
-            echo "- App: Boreal Dialer (iPhone + Apple Watch)"
+            echo "- App: KS-Dialer (iPhone + Apple Watch), team $TEAM_ID"
             echo "- Build number: $BUILD_NUMBER"
             echo "- Notes: ${NOTES:-none}"
             echo "Apple processes the build for 10-30 minutes, then it appears in TestFlight."

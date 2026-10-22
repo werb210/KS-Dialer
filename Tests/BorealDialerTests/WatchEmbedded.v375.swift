@@ -39,6 +39,6 @@ final class WatchEmbeddedV375Tests: XCTestCase {
     func testTheSchemeIsNotMistakenForTheTarget() throws {
         // The target block carries the bundle id; the scheme block never does.
         let block = try phoneTargetLines()
-        XCTAssertTrue(block.contains { $0.contains("PRODUCT_BUNDLE_IDENTIFIER: com.borealfinancial.dialer") })
+        XCTAssertTrue(block.contains { $0.contains("PRODUCT_BUNDLE_IDENTIFIER: $(KS_APP_BUNDLE_ID)") })
     }
 }

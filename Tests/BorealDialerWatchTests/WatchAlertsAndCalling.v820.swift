@@ -20,9 +20,9 @@ final class WatchAlertsAndCallingV820Tests: XCTestCase {
 
     func testCompanionErrorsReadAsTheirCause() {
         XCTAssertEqual(WatchServiceError.companionRefused(reason: "signed_out").safeMessage,
-                       "Sign in to Boreal Dialer on your iPhone.")
+                       "Sign in to the dialer app on your iPhone.")
         XCTAssertTrue(WatchServiceError.server(code: "callback_not_verified", message: "").safeMessage
-            .contains("Sign in to Boreal Dialer on your iPhone with the text code"))
+            .contains("Sign in to the dialer app on your iPhone with the text code"))
     }
 
     func testPathChoice() {

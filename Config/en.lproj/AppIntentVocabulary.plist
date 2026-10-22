@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<!-- BOREAL_DIALER_v836_SIRI_PHRASES - App Store Connect flagged ITMS-90626 "Invalid Siri Support": the app supports
+<!-- App Store Connect flagged ITMS-90626 "Invalid Siri Support": the app supports
      INSendMessageIntent (Siri replies in CarPlay / on AirPods) but gave no example phrase in English. -->
 <plist version="1.0">
 <dict>
@@ -11,9 +11,9 @@
 			<string>INSendMessageIntent</string>
 			<key>IntentExamples</key>
 			<array>
-				<string>Send a message to Jane with Boreal Dialer</string>
-				<string>Text Walter on Boreal Dialer that the documents are in</string>
-				<string>Reply to the client with Boreal Dialer</string>
+				<string>Send a message to Jane with Keystone Dialer</string>
+				<string>Text Walter on Keystone Dialer that the documents are in</string>
+				<string>Reply to the client with Keystone Dialer</string>
 			</array>
 		</dict>
 	</array>

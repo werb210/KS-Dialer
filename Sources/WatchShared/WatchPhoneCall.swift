@@ -19,7 +19,7 @@ public enum WatchCallPath: String, Codable, Equatable, Sendable {
     public var banner: String {
         switch self {
         case .viaIPhone: return "Calling via iPhone"
-        case .serverCallback: return "Boreal will ring your Watch, press 1 to connect"
+        case .serverCallback: return "We'll ring your Watch, press 1 to connect"
         }
     }
 
@@ -68,10 +68,10 @@ public struct WatchPhoneCallReply: Codable, Equatable, Sendable {
     /// server bridge: a busy iPhone or a signed-out app would refuse there too, or ring a second call.
     public static func message(for reason: String?) -> String {
         switch reason {
-        case reasonSignedOut: return "Sign in to Boreal Dialer on your iPhone."
+        case reasonSignedOut: return "Sign in to the dialer app on your iPhone."
         case reasonBusy: return "Your iPhone is already on a call."
         case reasonInvalidNumber: return "Enter a valid phone number"
-        case reasonMicrophone: return "Open Boreal Dialer on your iPhone and allow the microphone."
+        case reasonMicrophone: return "Open the dialer app on your iPhone and allow the microphone."
         default: return "Your iPhone could not place the call."
         }
     }
@@ -104,7 +104,7 @@ public struct WatchAlertReplyMessage: Codable, Equatable, Sendable {
 }
 
 extension WatchPayload {
-    public static let phoneCallKey = "boreal.watch.phonecall" // BOREAL_DIALER_v820_WATCH
-    public static let phoneCallReplyKey = "boreal.watch.phonecall.reply" // BOREAL_DIALER_v820_WATCH
-    public static let alertReplyKey = "boreal.watch.alertreply" // BOREAL_DIALER_v820_WATCH
+    public static let phoneCallKey = "keystone.watch.phonecall" // BOREAL_DIALER_v820_WATCH
+    public static let phoneCallReplyKey = "keystone.watch.phonecall.reply" // BOREAL_DIALER_v820_WATCH
+    public static let alertReplyKey = "keystone.watch.alertreply" // BOREAL_DIALER_v820_WATCH
 }

@@ -26,7 +26,7 @@ final class WatchLinkTruthTests: XCTestCase {
         // updateApplicationContext discards a dictionary equal to the last one,
         // so re-sending the same code without a stamp would silently do nothing.
         let bridge = try read("Sources/Voice/WatchBridge.swift")
-        XCTAssertTrue(bridge.contains("context[\"boreal.watch.enroll.at\"] = Date().timeIntervalSince1970"))
+        XCTAssertTrue(bridge.contains("context[\"keystone.watch.enroll.at\"] = Date().timeIntervalSince1970"))
     }
 
     func testTheSheetUsesTheReturnedValueInsteadOfAssumingSuccess() throws {
@@ -55,7 +55,7 @@ final class WatchLinkTruthTests: XCTestCase {
         for cause in ["No Apple Watch is paired", "Still connecting"] {
             XCTAssertTrue(bridge.contains(cause), "missing diagnostic: \(cause)")
         }
-        XCTAssertTrue(bridge.contains("Ready. Open Boreal on your Watch and it will link itself."))
+        XCTAssertTrue(bridge.contains("Ready. Open the dialer on your Watch and it will link itself."))
         let sheet = try read("UI/Settings/AccountSheet.swift")
         XCTAssertTrue(sheet.contains("WatchBridge.shared.linkDiagnostics()"))
     }

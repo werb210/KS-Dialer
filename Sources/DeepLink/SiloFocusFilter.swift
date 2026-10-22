@@ -3,24 +3,15 @@ import Foundation
 import AppIntents
 
 // BOREAL_DIALER_v593_FOCUS_FILTER
-@available(iOS 16.0, *)
-enum BorealFocusSilo: String, AppEnum {
-    case bf, bi, slf
-    static var typeDisplayRepresentation: TypeDisplayRepresentation = "Boreal line"
-    static var caseDisplayRepresentations: [BorealFocusSilo: DisplayRepresentation] = [
-        .bf: "Boreal Financial",
-        .bi: "Boreal Insurance",
-        .slf: "Site Level Financial",
-    ]
-}
+// KEYSTONE_SINGLE_LINE_v1 - Keystone has one line, so the Focus filter only chooses which alerts show.
 
-// BOREAL_DIALER_v821 - which Boreal alerts this Focus lets through (FocusAlertPolicy).
+// BOREAL_DIALER_v821 - which alerts this Focus lets through (FocusAlertPolicy).
 @available(iOS 16.0, *)
 enum BorealFocusAlerts: String, AppEnum {
     case all, clientOnly
-    static var typeDisplayRepresentation: TypeDisplayRepresentation = "Boreal alerts"
+    static var typeDisplayRepresentation: TypeDisplayRepresentation = "Dialer alerts"
     static var caseDisplayRepresentations: [BorealFocusAlerts: DisplayRepresentation] = [
-        .all: "All Boreal alerts",
+        .all: "All dialer alerts",
         .clientOnly: "Only client calls and messages",
     ]
 
@@ -32,15 +23,11 @@ enum BorealFocusAlerts: String, AppEnum {
     }
 }
 
-// BOREAL_DIALER_v821 - the one Focus filter is now "Boreal Dialer": the line (v593) plus which alerts show.
-// The type name stays BorealSiloFocusFilter so Focus filters people already set up keep working.
+// BOREAL_DIALER_v821 - the one Focus filter: which alerts show while the Focus is on.
 @available(iOS 16.0, *)
 struct BorealSiloFocusFilter: SetFocusFilterIntent {
-    static var title: LocalizedStringResource = "Boreal Dialer"
-    static var description = IntentDescription("Choose the Boreal line and which Boreal alerts reach you while this Focus is on.")
-
-    @Parameter(title: "Line", default: .bf)
-    var line: BorealFocusSilo
+    static var title: LocalizedStringResource = "Dialer Alerts"
+    static var description = IntentDescription("Choose which dialer alerts reach you while this Focus is on.")
 
     // BOREAL_DIALER_v821 - the default (.all) is also what the app falls back to when the Focus ends.
     @Parameter(title: "Alerts", default: .all)
@@ -48,7 +35,7 @@ struct BorealSiloFocusFilter: SetFocusFilterIntent {
 
     var displayRepresentation: DisplayRepresentation {
         let alertText = alerts == .clientOnly ? "Client calls and messages only" : "All alerts"
-        return DisplayRepresentation(title: "Boreal Dialer", subtitle: "\(line.rawValue.uppercased()) · \(alertText)")
+        return DisplayRepresentation(title: "Dialer Alerts", subtitle: "\(alertText)")
     }
 
     // BOREAL_DIALER_v821 - the system hides notifications marked "internal" (filterCriteria) while this Focus is on.
@@ -58,14 +45,6 @@ struct BorealSiloFocusFilter: SetFocusFilterIntent {
 
     @MainActor
     func perform() async throws -> some IntentResult {
-        // BOREAL_DIALER_v831_DIALER_POLISH - through LineManager, the one place the line changes, so the server
-        // requests, the calling token and the call screen all follow it. Setting VoiceEngine's line on its own moved
-        // only texts and the token to the Focus's silo. A line this app doesn't offer is left alone.
-        // Switching lines ends the call in progress, so a Focus that turns on mid-call leaves the line as it is.
-        if !VoiceEngine.shared.isOnCall,
-           let target = LineManager.shared.availableLines.first(where: { $0.silo.rawValue == line.rawValue }) {
-            LineManager.shared.switchLine(to: target)
-        }
         FocusAlertPolicy.currentMode = alerts.mode // BOREAL_DIALER_v821 - read by willPresent
         return .result()
     }

@@ -13,7 +13,7 @@ enum MicrophonePermission {
         case undetermined
     }
 
-    static let deniedMessage = "Microphone access is off for Boreal Dialer. Turn it on in Settings > Boreal Dialer > Microphone to make and take calls."
+    static let deniedMessage = "Microphone access is off for this app. Turn it on in Settings > Privacy & Security > Microphone to make and take calls."
 
     static var status: Status {
         if #available(iOS 17.0, *) {
@@ -696,7 +696,7 @@ final class VoiceEngine: NSObject, ObservableObject {
         case 31005, 31009, 31530, 53000, 53001, 53405:
             return "The call couldn't connect: the network dropped. Check your signal and try again."
         case 31208, 31401:
-            return "The call couldn't use the microphone. Check Settings > Boreal Dialer > Microphone."
+            return "The call couldn't use the microphone. Check Settings > Privacy & Security > Microphone."
         case 31486:
             return "The line is busy."
         case 31480:

@@ -312,7 +312,7 @@ struct ActiveCallControls: View {
                     .foregroundColor(.red)
                     .padding(.horizontal)
             } else if !conference.isActive && !voiceEngine.showKeypad {
-                Text("Hold, add and transfer need the call to be placed through Boreal.")
+                Text("Hold, add and transfer need the call to be placed through the office line.")
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .padding(.horizontal)

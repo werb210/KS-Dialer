@@ -18,9 +18,9 @@ final class WatchFaceV371Tests: XCTestCase {
     }
 
     func testOnlyKnownComplicationLinksRoute() {
-        XCTAssertEqual(WatchComplicationLink.target(for: URL(string: "borealwatch://dial")!), "dial")
-        XCTAssertEqual(WatchComplicationLink.target(for: URL(string: "borealwatch://recents")!), "recents")
-        XCTAssertNil(WatchComplicationLink.target(for: URL(string: "borealwatch://delete-everything")!))
+        XCTAssertEqual(WatchComplicationLink.target(for: URL(string: "kswatch://dial")!), "dial")
+        XCTAssertEqual(WatchComplicationLink.target(for: URL(string: "kswatch://recents")!), "recents")
+        XCTAssertNil(WatchComplicationLink.target(for: URL(string: "kswatch://delete-everything")!))
         XCTAssertNil(WatchComplicationLink.target(for: URL(string: "https://dial")!))
     }
 }

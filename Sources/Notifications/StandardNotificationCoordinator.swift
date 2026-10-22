@@ -144,7 +144,7 @@ enum MissedCallNotification {
         guard let payload = BorealAlertPayload(userInfo: userInfo), payload.kind.offersCallBack,
               let phone = payload.phone else { return nil }
         var components = URLComponents()
-        components.scheme = "borealdialer"
+        components.scheme = "ksdialer"
         components.host = "call"
         components.queryItems = [
             URLQueryItem(name: "phone", value: phone),

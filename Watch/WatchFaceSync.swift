@@ -9,8 +9,9 @@ import WatchKit
 import WidgetKit
 
 enum WatchFaceSync {
-    static let appGroup = "group.com.borealfinancial.dialer"
-    static let refreshTaskID = "boreal.face"
+    // KEYSTONE_CONFIG_v1 - from KS_APP_GROUP in Config/Keystone.xcconfig, via this target's Info.plist.
+    static let appGroup = (Bundle.main.object(forInfoDictionaryKey: "KSAppGroupIdentifier") as? String) ?? "group.com.keystone.dialer"
+    static let refreshTaskID = "keystone.face"
 
     struct Face: Decodable, Equatable {
         let status: String
@@ -83,7 +84,7 @@ enum WatchFaceSync {
 enum WatchComplicationLink {
     static let targets: Set<String> = ["dial", "recents"]
     static func target(for url: URL) -> String? {
-        guard url.scheme == "borealwatch", let host = url.host, targets.contains(host) else { return nil }
+        guard url.scheme == "kswatch", let host = url.host, targets.contains(host) else { return nil }
         return host
     }
 }

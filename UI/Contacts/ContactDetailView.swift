@@ -54,23 +54,15 @@ final class ContactDetailViewModel: ObservableObject {
     @Published var loading = false
     @Published var error: String?
 
-    // BOREAL_DIALER_BI_ACTIVITY_v52 - a BI contact's activity lives in
-    // bi_contact_activity on bi-pg01, so BF-Server's timeline endpoint returns
-    // nothing for it. Calls and SMS placed from this app still log to
-    // BF-Server, so a BI contact's phone activity will NOT appear here yet -
-    // the staff portal merges both sources and this does not.
+    // KEYSTONE_SINGLE_LINE_v1 - one server; `silo` is kept so call sites are unchanged.
     func load(contactId: String, silo: Silo) async {
         loading = true
         do {
-            if silo == .bi {
-                entries = try await BIDirectory.activity(contactId: contactId)
-            } else {
-                let request = try APIClient.shared.makeRequest(
-                    path: "/crm/contacts/\(contactId)/timeline"
-                )
-                let data = try await APIClient.shared.makeAuthorizedRequest(request)
-                entries = try JSONDecoder().decode(TimelineEnvelope.self, from: data).data
-            }
+            let request = try APIClient.shared.makeRequest(
+                path: "/crm/contacts/\(contactId)/timeline"
+            )
+            let data = try await APIClient.shared.makeAuthorizedRequest(request)
+            entries = try JSONDecoder().decode(TimelineEnvelope.self, from: data).data
             self.error = nil
         } catch {
             self.error = "Could not load activity."

@@ -119,7 +119,7 @@ public struct DeviceRegistration: Codable, Equatable, Sendable {
     public let app: String
     public let pushType: PushType
     public let token: String
-    public init(deviceId: String, platform: DevicePlatform, app: String = "boreal-dialer",
+    public init(deviceId: String, platform: DevicePlatform, app: String = "keystone-dialer",
                 pushType: PushType, token: String) {
         self.deviceId = deviceId; self.platform = platform; self.app = app
         self.pushType = pushType; self.token = token
@@ -173,7 +173,13 @@ public enum WatchAction: String, Codable, Sendable {
 
 public struct WatchEnrollMessage: Codable, Sendable, Equatable {
     public let oneTimeCode: String
-    public init(oneTimeCode: String) { self.oneTimeCode = oneTimeCode }
+    // KEYSTONE_COMPANY_CODE_v1 - the company's API base ({server_url}/api). The Watch has no company-code screen; it
+    // links to whichever server the iPhone is signed in to. Optional so a message without it still decodes.
+    public let serverURL: String?
+    public init(oneTimeCode: String, serverURL: String? = nil) {
+        self.oneTimeCode = oneTimeCode
+        self.serverURL = serverURL
+    }
 }
 
 public struct WatchActionMessage: Codable, Sendable, Equatable {
@@ -187,14 +193,14 @@ public struct WatchActionMessage: Codable, Sendable, Equatable {
 }
 
 public enum WatchPayload {
-    public static let eventKey = "boreal.watch.event"
-    public static let actionKey = "boreal.watch.action"
-    public static let enrollKey = "boreal.watch.enroll" // BOREAL_DIALER_WATCH_AUTOLINK_v1
+    public static let eventKey = "keystone.watch.event"
+    public static let actionKey = "keystone.watch.action"
+    public static let enrollKey = "keystone.watch.enroll" // BOREAL_DIALER_WATCH_AUTOLINK_v1
     // BOREAL_DIALER_WATCH_AUTOLINK_v341 - the Watch asking the phone for a code.
-    public static let enrollRequestKey = "boreal.watch.enroll.request"
-    public static let inCallKey = "boreal.watch.incall" // BOREAL_DIALER_WATCH_INCALL_v1
+    public static let enrollRequestKey = "keystone.watch.enroll.request"
+    public static let inCallKey = "keystone.watch.incall" // BOREAL_DIALER_WATCH_INCALL_v1
     // BOREAL_DIALER_LOGOUT_CLEAR_v789 - the phone signed out; drop its data on the wrist.
-    public static let clearKey = "boreal.watch.clear"
+    public static let clearKey = "keystone.watch.clear"
 
     public static func encode<T: Encodable>(_ value: T, under key: String) -> [String: Any] {
         guard let data = try? JSONEncoder().encode(value) else { return [:] }

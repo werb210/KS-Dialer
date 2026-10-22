@@ -18,10 +18,10 @@ enum FaceIDSignInError: Error {
 final class FaceIDSignIn: Sendable {
     static let shared = FaceIDSignIn()
 
-    private let service = "com.boreal.dialer.faceid"
+    private let service = "com.keystone.dialer.faceid"
     private let account = "device-sign-in-secret"
-    private let credentialIdKey = "boreal.faceid.credentialId"
-    private let offeredKey = "boreal.faceid.offered"
+    private let credentialIdKey = "keystone.faceid.credentialId"
+    private let offeredKey = "keystone.faceid.offered"
 
     private init() {}
 
@@ -100,7 +100,7 @@ final class FaceIDSignIn: Sendable {
     func enroll() async -> Bool {
         guard biometryAvailable else { return false }
         do {
-            let body = try JSONSerialization.data(withJSONObject: ["deviceLabel": "Boreal Dialer iPhone"])
+            let body = try JSONSerialization.data(withJSONObject: ["deviceLabel": "Dialer iPhone"])
             let request = try APIClient.shared.makeRequest(path: "/auth/device-sign-in/enroll", method: "POST", body: body)
             let data = try await APIClient.shared.makeAuthorizedRequest(request)
             let response = try JSONDecoder().decode(EnrollResponse.self, from: data)
@@ -115,7 +115,7 @@ final class FaceIDSignIn: Sendable {
     /// Face ID releases the secret; the server checks it, rotates it and returns a session token.
     func signIn() async throws -> String {
         guard let id = credentialId else { throw FaceIDSignInError.notEnrolled }
-        guard let secret = await readSecret(reason: "Sign in to Boreal Dialer") else { throw FaceIDSignInError.cancelled }
+        guard let secret = await readSecret(reason: "Sign in to the dialer") else { throw FaceIDSignInError.cancelled }
         let body = try JSONSerialization.data(withJSONObject: ["credentialId": id, "secret": secret])
         let data: Data
         do {

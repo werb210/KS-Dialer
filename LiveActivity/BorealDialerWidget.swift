@@ -39,7 +39,7 @@ struct BorealDialerProvider: TimelineProvider {
 enum DialerWidgetPalette {
     // Same values as the client widget's borealNavy / borealGold.
     static let navy = Color(red: 11 / 255, green: 31 / 255, blue: 58 / 255)
-    static let gold = Color(red: 201 / 255, green: 162 / 255, blue: 74 / 255)
+    static let accent = Color(red: 91 / 255, green: 141 / 255, blue: 239 / 255) // KEYSTONE_BRAND_v1 - neutral blue, was the brand gold
     static let red = Color(red: 1.0, green: 107 / 255, blue: 107 / 255)
     static let green = Color(red: 74 / 255, green: 222 / 255, blue: 128 / 255) // BOREAL_DIALER_v823_WIDGET_ACTIONS
     static let text = Color.white
@@ -50,20 +50,20 @@ struct BorealDialerWidgetView: View {
     @Environment(\.widgetFamily) private var family
     let entry: BorealDialerEntry
 
-    private var newCallURL: URL { URL(string: "borealdialer://new-call")! }
+    private var newCallURL: URL { URL(string: "ksdialer://new-call")! }
 
     var body: some View {
         switch family {
         case .systemLarge:
             largeView
         case .accessoryCircular:
-            Link(destination: URL(string: "borealdialer://new-call")!) {
+            Link(destination: URL(string: "ksdialer://new-call")!) {
                 VStack(spacing: 2) {
                     Image(systemName: "phone.fill")
-                    Text("Boreal").font(.system(size: 9, weight: .semibold))
+                    Text("Dialer").font(.system(size: 9, weight: .semibold))
                 }
             }
-            .widgetURL(URL(string: "borealdialer://new-call"))
+            .widgetURL(URL(string: "ksdialer://new-call"))
         case .accessoryRectangular:
             if let contact = entry.contacts.first {
                 Link(destination: callURL(contact.number)) {
@@ -74,10 +74,10 @@ struct BorealDialerWidgetView: View {
                 }
                 .widgetURL(callURL(contact.number))
             } else {
-                Link(destination: URL(string: "borealdialer://new-call")!) {
-                    Label("Open Boreal Dialer", systemImage: "phone.fill")
+                Link(destination: URL(string: "ksdialer://new-call")!) {
+                    Label("Open Dialer", systemImage: "phone.fill")
                 }
-                .widgetURL(URL(string: "borealdialer://new-call"))
+                .widgetURL(URL(string: "ksdialer://new-call"))
             }
         case .systemSmall:
             smallView
@@ -95,7 +95,7 @@ struct BorealDialerWidgetView: View {
     private var brandRow: some View {
         HStack(spacing: 6) {
             Image(systemName: "mountain.2.fill").font(.caption.bold())
-            Text("Boreal Dialer").font(.caption.bold()).lineLimit(1)
+            Text("Dialer").font(.caption.bold()).lineLimit(1)
         }
         .foregroundStyle(DialerWidgetPalette.text)
     }
@@ -144,7 +144,7 @@ struct BorealDialerWidgetView: View {
                 Button(intent: CompleteBorealTaskIntent(taskId: taskId)) {
                     Image(systemName: "circle")
                         .font(.caption.bold())
-                        .foregroundStyle(DialerWidgetPalette.gold)
+                        .foregroundStyle(DialerWidgetPalette.accent)
                         .frame(width: 16)
                 }
                 .buttonStyle(.plain)
@@ -160,7 +160,7 @@ struct BorealDialerWidgetView: View {
                     .lineLimit(1)
             }
         } else {
-            row(icon: "checklist", iconColor: DialerWidgetPalette.gold, title: item.title, detail: item.detail)
+            row(icon: "checklist", iconColor: DialerWidgetPalette.accent, title: item.title, detail: item.detail)
         }
     }
 
@@ -186,7 +186,7 @@ struct BorealDialerWidgetView: View {
             Text("New call").lineLimit(1)
         }
         .font(.subheadline.bold())
-        .foregroundStyle(DialerWidgetPalette.gold)
+        .foregroundStyle(DialerWidgetPalette.accent)
     }
 
     private var newCallLink: some View {
@@ -225,7 +225,7 @@ struct BorealDialerWidgetView: View {
 
     private func contactRow(_ contact: WidgetContact) -> some View {
         Link(destination: callURL(contact.number)) {
-            row(icon: "phone.fill", iconColor: DialerWidgetPalette.gold, title: contact.name, detail: "")
+            row(icon: "phone.fill", iconColor: DialerWidgetPalette.accent, title: contact.name, detail: "")
         }
     }
 
@@ -336,7 +336,7 @@ struct BorealDialerWidgetView: View {
             VStack(alignment: .leading, spacing: 3) {
                 sectionTitle("Next meeting")
                 if let title = entry.meetingTitle, let at = entry.meetingAt {
-                    row(icon: "calendar", iconColor: DialerWidgetPalette.gold,
+                    row(icon: "calendar", iconColor: DialerWidgetPalette.accent,
                         title: title, detail: DialerDashboardStore.time(at))
                 } else {
                     emptyText("Nothing scheduled")
@@ -362,7 +362,7 @@ struct BorealDialerWidgetView: View {
 
     private func callURL(_ number: String) -> URL {
         var components = URLComponents()
-        components.scheme = "borealdialer"
+        components.scheme = "ksdialer"
         components.host = "call"
         components.queryItems = [URLQueryItem(name: "number", value: number)]
         return components.url!
@@ -370,13 +370,13 @@ struct BorealDialerWidgetView: View {
 }
 
 struct BorealDialerWidget: Widget {
-    let kind = "BorealDialerWidget"
+    let kind = "KSDialerWidget"
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: BorealDialerProvider()) { entry in
             BorealDialerWidgetView(entry: entry).dialerWidgetBackground()
         }
-        .configurationDisplayName("Boreal Dialer")
+        .configurationDisplayName("Dialer")
         .description("Start a call, call back a missed call, and see what is next.")
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .accessoryCircular, .accessoryRectangular]) // BOREAL_DIALER_LARGE_WIDGET_v685
     }

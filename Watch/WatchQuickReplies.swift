@@ -155,7 +155,7 @@ struct WatchQuickReplyView: View {
             .disabled(sending)
             if loading { ProgressView() }
             if !loading && replies.isEmpty {
-                Text("No quick replies yet. Add snippets in the Boreal portal.")
+                Text("No quick replies yet. Add snippets in the staff portal.")
                     .font(.caption2).foregroundStyle(.secondary)
             }
             ForEach(replies) { reply in

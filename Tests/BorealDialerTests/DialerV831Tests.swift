@@ -55,7 +55,7 @@ final class DialerV831Tests: XCTestCase {
 
     func testANumberThatIsNotStaffIsToldSo() {
         let message = LoginView.codeErrorMessage(APIError.http(status: 403, code: "not_staff", message: nil))
-        XCTAssertTrue(message.contains("isn't set up as a Boreal staff account"))
+        XCTAssertTrue(message.contains("isn't set up as a staff account"))
         XCTAssertEqual(LoginView.codeErrorMessage(APIError.http(status: 401, code: nil, message: nil)), "That code didn't work. Please try again.")
     }
 

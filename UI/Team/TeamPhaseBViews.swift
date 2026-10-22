@@ -27,7 +27,7 @@ struct TeamThreadView: View {
             Text(message.sender_id == team.myId ? "You" : (message.bot ?? team.name(for: message.sender_id)))
                 .font(.caption)
                 .foregroundColor(.secondary)
-            TeamFormattedText(text: message.body, mentionNames: team.users.map { $0.name } + ["Maya"]) // BOREAL_DIALER_v803_MENTIONS
+            TeamFormattedText(text: message.body, mentionNames: team.users.map { $0.name } + ["Maya", "Assistant"]) // BOREAL_DIALER_v803_MENTIONS
             TeamCardsView(text: message.body) // BOREAL_DIALER_TEAM_PHASE_C_v673
         }
         .frame(maxWidth: .infinity, alignment: .leading)

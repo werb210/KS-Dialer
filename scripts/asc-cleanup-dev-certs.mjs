@@ -1,11 +1,11 @@
-// BOREAL_v833_CERT_CLEANUP - every cloud "Upload iOS build" run makes Xcode create a new "Apple Development" certificate
+// v833_CERT_CLEANUP - every cloud "Upload iOS build" run makes Xcode create a new "Apple Development" certificate
 // ("Created via API") for the company team, and Apple allows only a few. Once the limit was hit, archiving failed. This
 // deletes those leftover API-made development certificates through the App Store Connect API, just before the archive,
-// so each run cleans up after the earlier ones (its own is cleaned up by the next run, in any of the three apps).
+// so each run cleans up after the earlier ones (its own is cleaned up by the next run).
 //
 // It never touches anything else: only certificate types DEVELOPMENT / IOS_DEVELOPMENT whose name says "Created via
-// API". The cloud-managed Distribution certificate, Andrew Polturak's own development certificate and the VoIP push
-// certificates are all kept (they are other types, or named for a person). Every certificate is listed in the log
+// API". The cloud-managed Distribution certificate, any person's own development certificate and the VoIP push
+// certificates are all kept (they are other types, or not named "Created via API"). Every certificate is listed in the log
 // with what was done to it. One made in the last 75 minutes (the longest an upload can run) is kept: another app's upload may be using it.
 // It never fails the workflow: a problem is printed as a warning.
 //
@@ -14,7 +14,7 @@ import crypto from "node:crypto";
 
 const API = "https://api.appstoreconnect.apple.com/v1";
 const DEV_TYPES = new Set(["DEVELOPMENT", "IOS_DEVELOPMENT"]);
-const PROTECTED = [/polturak/i, /andrew/i, /distribution/i, /voip/i, /push/i];
+const PROTECTED = [/distribution/i, /voip/i, /push/i];
 
 /** A development certificate lasts a year, so it was made about a year before it expires. */
 const YEAR_MS = 365 * 24 * 3600 * 1000;

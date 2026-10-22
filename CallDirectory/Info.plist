@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Boreal Caller ID</string>
+	<string>$(KS_APP_DISPLAY_NAME) Caller ID</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -27,5 +27,7 @@
 		<key>NSExtensionPrincipalClass</key>
 		<string>$(PRODUCT_MODULE_NAME).CallDirectoryProvider</string>
 	</dict>
+	<key>KSAppGroupIdentifier</key>
+	<string>$(KS_APP_GROUP)</string>
 </dict>
 </plist>

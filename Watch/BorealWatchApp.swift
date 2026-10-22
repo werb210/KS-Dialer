@@ -91,7 +91,7 @@ enum WatchNotificationRegistration {
 final class WatchPushTokenStore {
     static let shared = WatchPushTokenStore()
     private(set) var token: String?
-    private let service = "financial.boreal.dialer.watch.apns"
+    private let service = "com.keystone.dialer.watch.apns"
     private let account = "watch-standard-token"
     // BOREAL_DIALER_v819_PUSH - the token was uploaded only at launch and right after linking, both with try?. One
     // failed upload (offline, expired session) left the server with no registration until the Watch app was next

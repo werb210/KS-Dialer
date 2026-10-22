@@ -191,7 +191,7 @@ enum AlertReplySender {
     static func postFailure(center: UNUserNotificationCenter = .current()) {
         let content = UNMutableNotificationContent()
         content.title = "Reply not sent"
-        content.body = "Open Boreal Dialer to try again."
+        content.body = "Open the dialer app to try again."
         content.sound = .default
         content.userInfo = ["type": "reply_failed"] // BOREAL_DIALER_v821 - a client reply: shown under the client-only Focus
         FocusAlertPolicy.tag(content, as: .client)

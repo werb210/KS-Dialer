@@ -12,7 +12,7 @@ enum DialerDeepLink: Equatable {
 
 enum DialerDeepLinkParser {
     static func parse(_ url: URL) -> DialerDeepLink? {
-        guard url.scheme?.lowercased() == "borealdialer" else { return nil }
+        guard url.scheme?.lowercased() == "ksdialer" else { return nil }
 
         if url.host?.lowercased() == "new-call", url.query == nil {
             return .newCall
@@ -178,7 +178,7 @@ enum BorealIntentText {
     static func nextMeeting(_ meeting: (title: String, startsAt: Date)?, now: Date,
                             calendar: Calendar = .current, locale: Locale = .current) -> String {
         guard let meeting, meeting.startsAt > now else {
-            return "You have no upcoming meetings in Boreal."
+            return "You have no upcoming meetings."
         }
         let formatter = DateFormatter()
         formatter.locale = locale
@@ -189,7 +189,7 @@ enum BorealIntentText {
 
     static func due(missedCalls: Int, tasksDue: Int) -> String {
         if missedCalls <= 0 && tasksDue <= 0 {
-            return "Nothing is due in Boreal right now."
+            return "Nothing is due right now."
         }
         var parts: [String] = []
         if missedCalls > 0 { parts.append("\(missedCalls) missed call\(missedCalls == 1 ? "" : "s")") }
@@ -201,13 +201,13 @@ enum BorealIntentText {
 #if canImport(AppIntents)
 @available(iOS 16.0, *)
 struct NewBorealCallIntent: AppIntent {
-    static var title: LocalizedStringResource = "New Boreal Call"
-    static var description = IntentDescription("Opens the Boreal Dialer keypad.")
+    static var title: LocalizedStringResource = "New Call"
+    static var description = IntentDescription("Opens the dialer keypad.")
     static var openAppWhenRun: Bool = true
 
     @MainActor
     func perform() async throws -> some IntentResult {
-        if let url = URL(string: "borealdialer://new-call") {
+        if let url = URL(string: "ksdialer://new-call") {
             DeepLinkCoordinator.shared.receive(url)
         }
         return .result()
@@ -216,7 +216,7 @@ struct NewBorealCallIntent: AppIntent {
 
 @available(iOS 16.0, *)
 struct NextBorealMeetingIntent: AppIntent {
-    static var title: LocalizedStringResource = "Next Boreal Meeting"
+    static var title: LocalizedStringResource = "Next Meeting"
     static var description = IntentDescription("Tells you your next meeting.")
 
     func perform() async throws -> some IntentResult & ProvidesDialog {
@@ -227,7 +227,7 @@ struct NextBorealMeetingIntent: AppIntent {
 
 @available(iOS 16.0, *)
 struct BorealDueIntent: AppIntent {
-    static var title: LocalizedStringResource = "What's Due in Boreal"
+    static var title: LocalizedStringResource = "What's Due"
     static var description = IntentDescription("Tells you your missed calls and tasks due.")
 
     func perform() async throws -> some IntentResult & ProvidesDialog {
@@ -294,8 +294,8 @@ struct BorealAppShortcuts: AppShortcutsProvider {
 // last call's client (the same as the "Boreal Voice Note" control and the Action Button).
 @available(iOS 16.0, *)
 struct RecordBorealNoteIntent: AppIntent {
-    static var title: LocalizedStringResource = "Record a Boreal Note"
-    static var description = IntentDescription("Dictate a note for your last call's client. It is saved to their Boreal timeline.")
+    static var title: LocalizedStringResource = "Record a Note"
+    static var description = IntentDescription("Dictate a note for your last call's client. It is saved to their timeline.")
     static var openAppWhenRun: Bool = true
 
     @MainActor

@@ -38,7 +38,7 @@ enum DialerDashboardStore {
               let data = try? JSONEncoder().encode(dashboard) else { return }
         defaults.set(data, forKey: key)
 #if canImport(WidgetKit)
-        WidgetCenter.shared.reloadTimelines(ofKind: "BorealDialerWidget")
+        WidgetCenter.shared.reloadTimelines(ofKind: "KSDialerWidget")
 #endif
     }
 
@@ -46,7 +46,7 @@ enum DialerDashboardStore {
     static func clear() {
         UserDefaults(suiteName: WidgetSnapshotStore.appGroup)?.removeObject(forKey: key)
 #if canImport(WidgetKit)
-        WidgetCenter.shared.reloadTimelines(ofKind: "BorealDialerWidget")
+        WidgetCenter.shared.reloadTimelines(ofKind: "KSDialerWidget")
 #endif
     }
 

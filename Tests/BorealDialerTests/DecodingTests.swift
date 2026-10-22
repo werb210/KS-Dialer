@@ -64,7 +64,7 @@ final class FormattingTests: XCTestCase {
     }
 
     func testInitialsAreTakenFromTheFirstTwoWords() {
-        XCTAssertEqual(AvatarCircle(name: "Andrew Polturak").initialsForTesting, "AP")
-        XCTAssertEqual(AvatarCircle(name: "Boreal").initialsForTesting, "B")
+        XCTAssertEqual(AvatarCircle(name: "Alex Parker").initialsForTesting, "AP")
+        XCTAssertEqual(AvatarCircle(name: "Beacon").initialsForTesting, "B")
     }
 }

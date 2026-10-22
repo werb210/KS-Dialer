@@ -92,7 +92,15 @@ extension WatchEventStore: WCSessionDelegate {
     nonisolated private func handle(_ message: [String: Any]) {
         // BOREAL_DIALER_WATCH_AUTOLINK_v1 - phone pushed an enrollment code; link silently.
         if let enroll = WatchPayload.decode(WatchEnrollMessage.self, from: message, key: WatchPayload.enrollKey) {
+            // KEYSTONE_COMPANY_CODE_v1 - keep the server the iPhone is signed in to. A different server means the
+            // iPhone switched company: the Watch's session belongs to the old server, so drop it and link afresh.
+            let serverChanged = CompanyStore.adoptServerURL(enroll.serverURL)
             Task { @MainActor in
+                if serverChanged {
+                    await WatchAuthService.shared.clear()
+                    WatchEventStore.shared.clearSensitiveData()
+                    WatchFaceSync.clear()
+                }
                 // BOREAL_DIALER_WATCH_ENROLL_DELIVERY_v173 - record the outcome.
                 // This was `try?`, so a rejected or expired code failed in
                 // total silence: the wrist kept rendering its local UI while

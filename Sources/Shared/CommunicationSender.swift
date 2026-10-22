@@ -15,7 +15,7 @@ struct CommunicationSender: Equatable {
     let body: String
 
     static let messageTypes: Set<String> = ["sms", "client_message"]
-    static let contactHandlePrefix = "boreal-contact:"
+    static let contactHandlePrefix = "ks-contact:"
 
     static func from(userInfo: [AnyHashable: Any], body: String, threadId: String) -> CommunicationSender? {
         guard let type = userInfo["type"] as? String, messageTypes.contains(type) else { return nil }
@@ -26,7 +26,7 @@ struct CommunicationSender: Equatable {
         let name = (userInfo["senderName"] as? String)?
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
-        let display = (name?.isEmpty == false ? name : nil) ?? phone.map(displayPhone) ?? "Boreal client"
+        let display = (name?.isEmpty == false ? name : nil) ?? phone.map(displayPhone) ?? "Client"
         let handle: String
         if let phone {
             handle = phone

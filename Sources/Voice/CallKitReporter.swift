@@ -203,7 +203,7 @@ final class CallKitReporter {
         }
         let uuid = UUID()
         let update = CXCallUpdate()
-        let value = (handle?.isEmpty == false ? handle : nil) ?? "Boreal"
+        let value = (handle?.isEmpty == false ? handle : nil) ?? "Dialer"
         update.remoteHandle = CXHandle(type: .generic, value: value)
         update.localizedCallerName = value
         update.hasVideo = false

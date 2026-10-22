@@ -26,7 +26,7 @@ final class OfflineModeV303Tests: XCTestCase {
     }
 
     func testReadCacheKeepsGetResponsesOnly() throws {
-        var get = URLRequest(url: URL(string: "https://server.boreal.financial/api/voice/recent-calls")!)
+        var get = URLRequest(url: URL(string: "https://ks.example.com/api/voice/recent-calls")!)
         get.httpMethod = "GET"
         ResponseCache.store(Data("[1]".utf8), for: get)
         XCTAssertEqual(ResponseCache.load(for: get), Data("[1]".utf8))

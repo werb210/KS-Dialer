@@ -18,7 +18,7 @@ enum WatchServiceError: Error, Equatable {
         case .server(let code, let message):
             // BOREAL_DIALER_v820_WATCH - say how to fix it, not just what is missing.
             return code == "callback_not_verified"
-                ? "Your cell number isn't verified yet. Sign in to Boreal Dialer on your iPhone with the text code sent to your cell, then try again."
+                ? "Your cell number isn't verified yet. Sign in to the dialer on your iPhone with the text code sent to your cell, then try again."
                 : (message.isEmpty ? "The server could not complete the request." : message)
         case .companionRefused(let reason): return WatchPhoneCallReply.message(for: reason)
         case .companionUnavailable: return "Your iPhone isn't reachable"
@@ -44,7 +44,7 @@ protocol WatchCredentialStore {
 }
 
 final class WatchKeychainCredentialStore: WatchCredentialStore {
-    private let service = "financial.boreal.dialer.watch.auth"
+    private let service = "com.keystone.dialer.watch.auth"
     private let account = "watch-session"
     func read() -> String? {
         let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword,
@@ -142,8 +142,9 @@ struct WatchAPIClient: @unchecked Sendable {
         self.transport = transport ?? { req in try await session.data(for: req) }
     }
     init(session: URLSession = .shared, auth: WatchAuthService = .shared, transport: Transport? = nil) throws {
-        guard let value = Bundle.main.object(forInfoDictionaryKey: "BorealAPIBaseURL") as? String,
-              let url = URL(string: value) else { throw WatchServiceError.invalidResponse }
+        // KEYSTONE_COMPANY_CODE_v1 - the server the iPhone sent with the link code (no server until then).
+        guard let value = CompanyStore.apiBaseURL,
+              let url = URL(string: value) else { throw WatchServiceError.notAuthenticated }
         try self.init(baseURL: url, session: session, auth: auth, transport: transport)
     }
     func unauthenticated(path: String, method: String = "GET", body: Data? = nil,

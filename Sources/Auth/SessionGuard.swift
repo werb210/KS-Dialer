@@ -10,7 +10,7 @@ import Foundation
 // screen, so an unexpected sign-out says which request caused it.
 actor SessionGuard {
     static let shared = SessionGuard()
-    private static let reasonKey = "boreal.dialer.lastSignOutReason"
+    private static let reasonKey = "keystone.dialer.lastSignOutReason"
     private var checking = false
 
     /// Called when a request returned 401. Signs out only if the session is really gone.

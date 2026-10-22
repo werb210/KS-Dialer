@@ -7,7 +7,7 @@ for key in presence.status calls.missed tasks.due meeting.next.title meeting.nex
   grep -q "\"$key\"" Watch/WatchFaceSync.swift || { echo "::error::WatchFaceSync does not write $key"; exit 1; }
   grep -q "\"$key\"" WatchWidget/BorealWatchWidget.swift || { echo "::error::widget does not read $key"; exit 1; }
 done
-for target in $(grep -oE 'borealwatch://[a-z]+' WatchWidget/BorealWatchWidget.swift | sed 's#borealwatch://##' | sort -u); do
+for target in $(grep -oE 'kswatch://[a-z]+' WatchWidget/BorealWatchWidget.swift | sed 's#kswatch://##' | sort -u); do
   grep -q "\"$target\"" Watch/WatchFaceSync.swift || { echo "::error::complication link $target has no route"; exit 1; }
   grep -q "complicationBinding(\"$target\")" Watch/WatchRootView.swift || { echo "::error::no screen for $target"; exit 1; }
 done

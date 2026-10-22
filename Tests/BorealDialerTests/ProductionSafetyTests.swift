@@ -4,61 +4,61 @@ import XCTest
 final class ProductionSafetyTests: XCTestCase {
     func testWidgetCallDeepLinkStartsImmediately() {
         XCTAssertEqual(
-            DialerDeepLinkParser.parse(URL(string: "borealdialer://call?number=%2B14035551234")!),
+            DialerDeepLinkParser.parse(URL(string: "ksdialer://call?number=%2B14035551234")!),
             .phone("+14035551234", start: true)
         )
     }
 
     func testNewCallDeepLinkOpensKeypad() {
         XCTAssertEqual(
-            DialerDeepLinkParser.parse(URL(string: "borealdialer://new-call")!),
+            DialerDeepLinkParser.parse(URL(string: "ksdialer://new-call")!),
             .newCall
         )
     }
 
     func testPhoneDeepLinkNormalizesAndDoesNotStartByDefault() {
-        XCTAssertEqual(DialerDeepLinkParser.parse(URL(string: "borealdialer://call?phone=+14035551234")!),
+        XCTAssertEqual(DialerDeepLinkParser.parse(URL(string: "ksdialer://call?phone=+14035551234")!),
                        .phone("+14035551234", start: false))
     }
 
     func testPhoneDeepLinkSupportsExplicitImmediateStart() {
-        XCTAssertEqual(DialerDeepLinkParser.parse(URL(string: "borealdialer://call?phone=+14035551234&start=true")!),
+        XCTAssertEqual(DialerDeepLinkParser.parse(URL(string: "ksdialer://call?phone=+14035551234&start=true")!),
                        .phone("+14035551234", start: true))
     }
 
     func testContactDeepLinkAndExplicitStart() {
-        XCTAssertEqual(DialerDeepLinkParser.parse(URL(string: "borealdialer://call?contactId=abc_123&start=true")!),
+        XCTAssertEqual(DialerDeepLinkParser.parse(URL(string: "ksdialer://call?contactId=abc_123&start=true")!),
                        .contact(id: "abc_123", start: true))
     }
 
     func testDeepLinkWithoutQueryIsRejected() {
-        XCTAssertNil(DialerDeepLinkParser.parse(URL(string: "borealdialer://call")!))
+        XCTAssertNil(DialerDeepLinkParser.parse(URL(string: "ksdialer://call")!))
     }
 
     func testDeepLinkWithDuplicateParameterIsRejected() {
-        XCTAssertNil(DialerDeepLinkParser.parse(URL(string: "borealdialer://call?phone=+14035551234&phone=+14035550000")!))
+        XCTAssertNil(DialerDeepLinkParser.parse(URL(string: "ksdialer://call?phone=+14035551234&phone=+14035550000")!))
     }
 
     func testDeepLinkWithUnknownParameterIsRejected() {
-        XCTAssertNil(DialerDeepLinkParser.parse(URL(string: "borealdialer://call?phone=+14035551234&unknown=x")!))
+        XCTAssertNil(DialerDeepLinkParser.parse(URL(string: "ksdialer://call?phone=+14035551234&unknown=x")!))
     }
 
     func testDeepLinkWithPhoneAndContactIsRejected() {
-        XCTAssertNil(DialerDeepLinkParser.parse(URL(string: "borealdialer://call?phone=+123&contactId=abc")!))
+        XCTAssertNil(DialerDeepLinkParser.parse(URL(string: "ksdialer://call?phone=+123&contactId=abc")!))
     }
 
     func testDeepLinkWithInvalidStartIsRejected() {
-        XCTAssertNil(DialerDeepLinkParser.parse(URL(string: "borealdialer://call?phone=+14035551234&start=maybe")!))
+        XCTAssertNil(DialerDeepLinkParser.parse(URL(string: "ksdialer://call?phone=+14035551234&start=maybe")!))
     }
 
     func testDeepLinkWithInvalidContactCharactersIsRejected() {
-        XCTAssertNil(DialerDeepLinkParser.parse(URL(string: "borealdialer://call?contactId=../../bad")!))
+        XCTAssertNil(DialerDeepLinkParser.parse(URL(string: "ksdialer://call?contactId=../../bad")!))
     }
 
     func testMalformedAndUntrustedDeepLinksAreRejected() {
-        ["javascript:alert(1)", "file:///tmp/x", "borealdialer://call?phone=555-1212",
-         "borealdialer://call?phone=%2B14165550123&evil=x",
-         "borealdialer://call?phone=%2B14165550123&contactId=x"].forEach {
+        ["javascript:alert(1)", "file:///tmp/x", "ksdialer://call?phone=555-1212",
+         "ksdialer://call?phone=%2B14165550123&evil=x",
+         "ksdialer://call?phone=%2B14165550123&contactId=x"].forEach {
             XCTAssertNil(DialerDeepLinkParser.parse(URL(string: $0)!))
         }
     }
@@ -104,7 +104,7 @@ final class ProductionSafetyTests: XCTestCase {
     func testInstalledAppTargetDeclaresSchemeAndSingleProviderOwner() throws {
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
         let project = try String(contentsOf: root.appendingPathComponent("project.yml"))
-        XCTAssertTrue(project.contains("borealdialer"))
+        XCTAssertTrue(project.contains("ksdialer"))
         let engine = try String(contentsOf: root.appendingPathComponent("Sources/Voice/VoiceEngine.swift"))
         XCTAssertEqual(engine.components(separatedBy: "CXProvider(configuration:").count - 1, 1)
     }

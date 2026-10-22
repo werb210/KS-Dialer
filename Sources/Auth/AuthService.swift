@@ -19,6 +19,12 @@ final class AuthService: ObservableObject {
     private init() {
         KeychainService.shared.migrateAccessibilityIfNeeded()
         switch TokenStorage.shared.state() {
+        case .present where CompanyStore.current == nil:
+            // KEYSTONE_COMPANY_CODE_v1 - the Keychain outlives a reinstall but the App Group (the company) does not.
+            // A token with no company would call nobody's server, so start again at the company code. Checked only
+            // when the token is readable: the device is unlocked then, so the App Group is readable too.
+            TokenStorage.shared.clear()
+            isAuthenticated = false
         case .present:
             isAuthenticated = true
         case .locked:
@@ -42,6 +48,10 @@ final class AuthService: ObservableObject {
         switch TokenStorage.shared.state() {
         case .locked:
             return // still locked; try again next time
+        case .present where CompanyStore.current == nil: // KEYSTONE_COMPANY_CODE_v1
+            awaitingUnlock = false
+            TokenStorage.shared.clear()
+            isAuthenticated = false
         case .present:
             awaitingUnlock = false
             resumeSavedSession()

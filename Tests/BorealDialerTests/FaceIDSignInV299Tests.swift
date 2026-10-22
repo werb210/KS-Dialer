@@ -6,7 +6,7 @@ final class FaceIDSignInV299Tests: XCTestCase {
     override func setUp() {
         super.setUp()
         FaceIDSignIn.shared.clear()
-        UserDefaults.standard.removeObject(forKey: "boreal.faceid.offered")
+        UserDefaults.standard.removeObject(forKey: "keystone.faceid.offered")
     }
 
     func testNotEnrolledByDefault() {

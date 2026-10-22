@@ -11,9 +11,9 @@ struct FavouriteContact: Codable, Equatable, Identifiable {
 
 final class FavouriteContacts {
     static let shared = FavouriteContacts()
-    static let storageKey = "boreal.v822.favouriteContacts"
+    static let storageKey = "keystone.v822.favouriteContacts"
     static let limit = 12
-    static let didChange = Notification.Name("BorealFavouriteContactsDidChange")
+    static let didChange = Notification.Name("KSFavouriteContactsDidChange")
 
     private let defaults: UserDefaults
 

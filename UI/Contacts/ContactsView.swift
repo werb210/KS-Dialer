@@ -114,9 +114,8 @@ final class ContactsViewModel: ObservableObject {
 
     private var searchTask: Task<Void, Never>?
 
-    // BOREAL_DIALER_CONTACTS_SILO_v39 - contacts only. Calling, SMS, messages,
-    // team and calendar stay on BF; this does not touch them.
-    @Published var silo: Silo = .bf
+    // KEYSTONE_SINGLE_LINE_v1 - always the one line; there is no silo picker.
+    let silo: Silo = .bf
 
     var totalCount: Int { contacts.count + companies.count }
 
@@ -147,21 +146,15 @@ final class ContactsViewModel: ObservableObject {
         error = nil
         do {
             let trimmed = query.trimmingCharacters(in: .whitespaces)
-            // BOREAL_DIALER_BI_CONTACTS_v51 - BI contacts are not in BF-Server's
-            // database at all, so this silo goes to bi-server. SLF has no
-            // contact records anywhere yet and correctly shows "No contacts".
-            if silo == .bi {
-                contacts = try await BIDirectory.contacts(search: trimmed)
-            } else {
-                var path = "/crm/contacts?pageSize=200"
-                if !trimmed.isEmpty,
-                   let encoded = trimmed.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) {
-                    path += "&q=\(encoded)"
-                }
-                let request = try APIClient.shared.makeRequest(path: path, silo: silo)
-                let data = try await APIClient.shared.makeAuthorizedRequest(request)
-                contacts = try JSONDecoder().decode(ContactsListEnvelope.self, from: data).data
+            // KEYSTONE_SINGLE_LINE_v1 - one company server, one contact list.
+            var path = "/crm/contacts?pageSize=200"
+            if !trimmed.isEmpty,
+               let encoded = trimmed.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) {
+                path += "&q=\(encoded)"
             }
+            let request = try APIClient.shared.makeRequest(path: path, silo: silo)
+            let data = try await APIClient.shared.makeAuthorizedRequest(request)
+            contacts = try JSONDecoder().decode(ContactsListEnvelope.self, from: data).data
             self.error = nil
             if trimmed.isEmpty { ContactSpotlight.index(contacts) } // BOREAL_DIALER_v593_SPOTLIGHT
         } catch {
@@ -175,16 +168,9 @@ final class ContactsViewModel: ObservableObject {
 
     private func loadCompanies() async {
         do {
-            // BOREAL_DIALER_BI_CONTACTS_v51 - bi_companies, same story as contacts.
-            if silo == .bi {
-                companies = try await BIDirectory.companies(
-                    search: query.trimmingCharacters(in: .whitespaces)
-                )
-            } else {
-                let request = try APIClient.shared.makeRequest(path: "/companies", silo: silo)
-                let data = try await APIClient.shared.makeAuthorizedRequest(request)
-                companies = try JSONDecoder().decode(CompaniesEnvelope.self, from: data).data
-            }
+            let request = try APIClient.shared.makeRequest(path: "/companies", silo: silo)
+            let data = try await APIClient.shared.makeAuthorizedRequest(request)
+            companies = try JSONDecoder().decode(CompaniesEnvelope.self, from: data).data
         } catch {
             companies = []
         }
@@ -244,24 +230,6 @@ struct ContactsView: View {
             .clipShape(RoundedRectangle(cornerRadius: 10))
             .padding(.horizontal)
             .padding(.vertical, 8)
-
-            // BOREAL_DIALER_CONTACTS_SILO_v39
-            SegmentedBar(
-                options: [Silo.bf, Silo.bi, Silo.slf],
-                title: { silo in
-                    switch silo {
-                    case .bf: return "Financial"
-                    case .bi: return "Insurance"
-                    case .slf: return "SLF"
-                    }
-                },
-                selection: $viewModel.silo
-            )
-            .padding(.horizontal, 16)
-            .padding(.bottom, 8)
-            .onChange(of: viewModel.silo) { _ in
-                Task { await viewModel.load() }
-            }
 
             Divider()
 

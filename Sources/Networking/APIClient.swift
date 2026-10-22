@@ -25,7 +25,7 @@ extension APIError: LocalizedError {
         "forbidden": "You don't have access to that.",
         "not_found": "That item no longer exists.",
         // BOREAL_DIALER_v831_DIALER_POLISH
-        "not_staff": "This number isn't set up as a Boreal staff account. Ask an admin to add it.",
+        "not_staff": "This number isn't set up as a staff account. Ask an admin to add it.",
         "request_in_progress": "That change is already being saved.",
     ]
 

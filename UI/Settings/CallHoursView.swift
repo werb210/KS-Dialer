@@ -65,7 +65,7 @@ struct CallHoursView: View {
         Form {
             Section {
                 Toggle("Do not disturb outside call hours", isOn: $model.draft.enabled)
-                Text("Outside your hours, Boreal calls go to voicemail instead of ringing you.")
+                Text("Outside your hours, calls go to voicemail instead of ringing you.")
                     .font(.footnote)
                     .foregroundColor(Theme.muted)
             }

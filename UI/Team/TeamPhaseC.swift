@@ -137,7 +137,11 @@ struct TeamCardsView: View {
         VStack(alignment: .leading, spacing: 4) {
             ForEach(keys.compactMap { store.cards[$0] }) { card in
                 Button {
-                    if let url = URL(string: "https://staff.boreal.financial" + card.url) { openURL(url) }
+                    // KEYSTONE_COMPANY_CODE_v1 - the company's own staff portal (portal_url from the directory).
+                    if let portal = CompanyStore.current?.portalURL,
+                       let url = URL(string: portal.trimmingCharacters(in: CharacterSet(charactersIn: "/")) + card.url) {
+                        openURL(url)
+                    }
                 } label: {
                     HStack(spacing: 8) {
                         Image(systemName: card.kind == "application" ? "briefcase.fill" : "person.crop.circle")

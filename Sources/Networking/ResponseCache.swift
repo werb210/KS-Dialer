@@ -10,7 +10,7 @@ enum ResponseCache {
 
     private static var directory: URL? {
         guard let base = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first else { return nil }
-        let dir = base.appendingPathComponent("BorealResponseCache", isDirectory: true)
+        let dir = base.appendingPathComponent("KSResponseCache", isDirectory: true)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         return dir
     }
@@ -42,6 +42,6 @@ enum ResponseCache {
 
     static func clear() {
         guard let base = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first else { return }
-        try? FileManager.default.removeItem(at: base.appendingPathComponent("BorealResponseCache", isDirectory: true))
+        try? FileManager.default.removeItem(at: base.appendingPathComponent("KSResponseCache", isDirectory: true))
     }
 }

@@ -473,7 +473,7 @@ struct TeamView: View {
         NavigationView {
             VStack(spacing: 0) {
             // BOREAL_DIALER_v803_UI - mockup header: title, subtitle, green "+ New".
-            ViewHeader(title: "Team", subtitle: "Boreal staff \u{00B7} internal calling") {
+            ViewHeader(title: "Team", subtitle: "Staff \u{00B7} internal calling") {
                 Button { showNew = true } label: { HeaderActionLabel(text: "+ New") }
                     .buttonStyle(.plain)
                     .accessibilityLabel("New conversation")
@@ -686,7 +686,7 @@ struct TeamChannelView: View {
     private var draftIsBlank: Bool { draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
 
     // BOREAL_DIALER_v803_MENTIONS
-    private var mentionNames: [String] { store.users.map { $0.name } + ["Maya"] }
+    private var mentionNames: [String] { store.users.map { $0.name } + ["Maya", "Assistant"] } // KEYSTONE: @maya and @<assistant name> both reach the assistant
 
     private var mentionCandidates: [TeamUser] {
         guard let query = mentionQuery else { return [] }
@@ -799,7 +799,7 @@ struct TeamChannelView: View {
                         .frame(width: 32, height: 36)
                 }
                 .accessibilityLabel(store.readThisNext ? "Read this is on" : "Send as Read this")
-                TextField(channel?.archived_at != nil ? "This channel is archived" : (store.readThisNext ? "Read this: message" : "Message, @name or @Maya"), text: $draft, axis: .vertical)
+                TextField(channel?.archived_at != nil ? "This channel is archived" : (store.readThisNext ? "Read this: message" : "Message or @name"), text: $draft, axis: .vertical)
                     .lineLimit(1...6)
                     .textFieldStyle(.plain)
                     .font(.system(size: 15))

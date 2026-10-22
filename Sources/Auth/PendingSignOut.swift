@@ -20,7 +20,7 @@ struct PendingSignOutWork: Codable, Equatable {
 }
 
 enum PendingSignOut {
-    private static let key = "boreal.dialer.pendingSignOut"
+    private static let key = "keystone.dialer.pendingSignOut"
 
     /// Only a sign-in that is definitely gone counts. A locked keychain (just restarted) or a keychain read error is not
     /// "signed out" - treating it so would turn away a signed-in person's calls.

@@ -155,7 +155,7 @@ final class WatchCallPathV820Tests: XCTestCase {
         XCTAssertEqual(WatchCallPath.choose(companionReachable: true), .viaIPhone)
         XCTAssertEqual(WatchCallPath.choose(companionReachable: false), .serverCallback)
         XCTAssertEqual(WatchCallPath.viaIPhone.banner, "Calling via iPhone")
-        XCTAssertEqual(WatchCallPath.serverCallback.banner, "Boreal will ring your Watch, press 1 to connect")
+        XCTAssertEqual(WatchCallPath.serverCallback.banner, "We'll ring your Watch, press 1 to connect")
     }
 
     func testStatusLines() {

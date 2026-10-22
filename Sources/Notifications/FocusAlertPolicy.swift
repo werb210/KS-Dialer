@@ -26,7 +26,7 @@ enum FocusAlertMode: String, Equatable, CaseIterable {
 }
 
 enum FocusAlertPolicy {
-    static let modeKey = "boreal.focus.alertMode.v821"
+    static let modeKey = "keystone.focus.alertMode.v821"
 
     /// Alert types that are about a client.
     static let clientTypes: Set<String> = [

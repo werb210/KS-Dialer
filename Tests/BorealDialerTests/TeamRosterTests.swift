@@ -4,8 +4,8 @@ import XCTest
 
 final class TeamRosterTests: XCTestCase {
     private let roster = [
-        TeamUser(id: "u1", name: "Todd Werboweski", email: "todd.w@boreal.financial"),
-        TeamUser(id: "u2", name: "Andrew Polturak", email: "andrew.p@boreal.financial"),
+        TeamUser(id: "u1", name: "Alex Morgan", email: "alex@example.com"),
+        TeamUser(id: "u2", name: "Sam Lee", email: "sam@example.com"),
         TeamUser(id: "u3", name: "client-submission", email: "client-submission@system.local")
     ]
 

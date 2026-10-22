@@ -4,7 +4,7 @@ import XCTest
 
 final class WatchAutoLinkTests: XCTestCase {
     func testTheRequestKeyIsShared() {
-        XCTAssertEqual(WatchPayload.enrollRequestKey, "boreal.watch.enroll.request")
+        XCTAssertEqual(WatchPayload.enrollRequestKey, "keystone.watch.enroll.request")
     }
 
     func testTheEnrollPayloadStillRoundTrips() throws {
@@ -15,7 +15,7 @@ final class WatchAutoLinkTests: XCTestCase {
 
     func testAStampedContextStillDecodes() throws {
         var payload = WatchPayload.encode(WatchEnrollMessage(oneTimeCode: "87654321"), under: WatchPayload.enrollKey)
-        payload["boreal.watch.enroll.at"] = Date().timeIntervalSince1970
+        payload["keystone.watch.enroll.at"] = Date().timeIntervalSince1970
         let decoded = WatchPayload.decode(WatchEnrollMessage.self, from: payload, key: WatchPayload.enrollKey)
         XCTAssertEqual(decoded?.oneTimeCode, "87654321")
     }

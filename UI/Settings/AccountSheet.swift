@@ -9,10 +9,10 @@ import SwiftUI
 
 struct AccountSheet: View {
     @Environment(\.dismiss) private var dismiss
-    @ObservedObject private var lineManager = LineManager.shared
     @ObservedObject private var callDirectory = CallDirectoryManager.shared
 
     @State private var confirmingSignOut = false
+    @State private var confirmingSwitchCompany = false // KEYSTONE_COMPANY_CODE_v1
     @State private var watchEnrollment: WatchEnrollment?
     @State private var watchEnrollmentError: String?
     @State private var generatingWatchCode = false
@@ -105,7 +105,7 @@ struct AccountSheet: View {
                         Label("Call hours", systemImage: "moon.zzz")
                     }
                     .listRowBackground(Color.clear)
-                    Text("Outside your hours, Boreal calls go to voicemail; urgent callers can press 1.")
+                    Text("Outside your hours, calls go to voicemail; urgent callers can press 1.")
                         .rowSubtitle()
                         .listRowBackground(Color.clear)
                 } header: {
@@ -120,7 +120,7 @@ struct AccountSheet: View {
                         Button { callDirectory.openSettings() } label: {
                             Label("Open Settings", systemImage: "gear")
                         }
-                        Text("Enable Boreal Caller ID in Settings > Phone > Call Blocking & Identification.")
+                        Text("Enable Caller ID for this app in Settings > Phone > Call Blocking & Identification.")
                             .rowSubtitle()
                     }
                 } header: {
@@ -128,19 +128,27 @@ struct AccountSheet: View {
                 }
                 .onAppear { callDirectory.updateEnabledStatus() }
 
+                // KEYSTONE_COMPANY_CODE_v1 - which company this phone is signed in to, and the way out of it.
                 Section {
-                    // Calling, SMS, messages, team and calendar are BF. Only the
-                    // Contacts tab reads across silos, and it has its own picker,
-                    // so this is stated rather than offered as a choice.
-                    HStack {
-                        Text("Calling line").rowSubtitle()
+                    HStack(spacing: 12) {
+                        CompanyLogoView(company: CompanyStore.current, size: 32)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(CompanyStore.current?.companyName ?? "No company").rowTitle()
+                            if let code = CompanyStore.current?.companyCode {
+                                Text("Company code: \(code)").rowSubtitle()
+                            }
+                        }
                         Spacer()
-                        Text(lineManager.activeLine.name)
-                            .font(.system(size: 14, weight: .medium))
+                    }
+                    .listRowBackground(Color.clear)
+                    Button {
+                        confirmingSwitchCompany = true
+                    } label: {
+                        Label("Switch company", systemImage: "building.2")
                     }
                     .listRowBackground(Color.clear)
                 } header: {
-                    SectionLabel(text: "Line")
+                    SectionLabel(text: "Company")
                 }
 
                 // BOREAL_DIALER_WATCH_LINK_TRUTH_v340
@@ -170,10 +178,10 @@ struct AccountSheet: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Label("Answer calls on my Watch without iPhone", systemImage: "applewatch.radiowaves.left.and.right")
                             .font(.system(size: 14, weight: .semibold))
-                        Text("When your iPhone isn't reachable, Boreal calls ring your cell number, which rings your Watch. Press 1 to accept.")
+                        Text("When your iPhone isn't reachable, calls ring your cell number, which rings your Watch. Press 1 to accept.")
                             .rowSubtitle()
                         Text(standaloneCellLine).rowSubtitle()
-                        Text("Turn it on in Boreal on your Watch: Account > Answer calls on my Watch without iPhone.")
+                        Text("Turn it on in the dialer on your Watch: Account > Answer calls on my Watch without iPhone.")
                             .rowSubtitle()
                     }
                     .padding(.vertical, 4)
@@ -202,7 +210,7 @@ struct AccountSheet: View {
                 }
             }
             .confirmationDialog(
-                "Sign out of Boreal Dialer?",
+                "Sign out?",
                 isPresented: $confirmingSignOut,
                 titleVisibility: .visible
             ) {
@@ -218,6 +226,24 @@ struct AccountSheet: View {
             } message: {
                 Text("You'll need your phone number and a code to sign back in. Any call in progress will end.")
             }
+            // KEYSTONE_COMPANY_CODE_v1 - signs out (revoking this phone on the current company's server while the token
+            // still works), then forgets the company so the next screen asks for a company code.
+            .confirmationDialog(
+                "Switch company?",
+                isPresented: $confirmingSwitchCompany,
+                titleVisibility: .visible
+            ) {
+                Button("Sign out and switch", role: .destructive) {
+                    Task {
+                        await AuthService.shared.logout()
+                        CompanyStore.clear()
+                        dismiss()
+                    }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("You'll be signed out and asked for a company code. Any call in progress will end.")
+            }
         }
     }
 
@@ -232,7 +258,7 @@ struct AccountSheet: View {
             await MainActor.run {
                 let delivered = WatchBridge.shared.sendEnrollment(enrollment.oneTimeCode)
                 watchLinkSent = delivered
-                watchStatus = delivered ? "Sent to your Apple Watch. Open Boreal on the Watch." : WatchBridge.shared.linkDiagnostics()
+                watchStatus = delivered ? "Sent to your Apple Watch. Open the dialer on the Watch." : WatchBridge.shared.linkDiagnostics()
                 watchEnrollment = enrollment
                 generatingWatchCode = false
             }

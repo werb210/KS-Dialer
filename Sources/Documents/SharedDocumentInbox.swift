@@ -42,7 +42,7 @@ final class SharedDocumentInbox: ObservableObject {
         guard url.isFileURL else { return false }
         let secured = url.startAccessingSecurityScopedResource()
         defer { if secured { url.stopAccessingSecurityScopedResource() } }
-        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("SharedToBoreal", isDirectory: true)
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("SharedToDialer", isDirectory: true)
         try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         let copy = folder.appendingPathComponent(url.lastPathComponent)
         try? FileManager.default.removeItem(at: copy)

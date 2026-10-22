@@ -45,7 +45,9 @@ if grep -rnE '"/(api/)?v1/' Sources UI --include='*.swift' | grep -v '"/v1/bi/';
   echo "::error::BF-Server paths have no /v1/ segment"
   exit 1
 fi
-if grep -rnE '"/api/' Sources UI --include='*.swift'; then
+# KEYSTONE_COMPANY_CODE_v1 - CompanyStore calls KS-Ops ({KSOpsURL}/api/directory/...), not the company server, so it
+# is the one file that spells out /api/.
+if grep -rnE '"/api/' Sources UI --include='*.swift' | grep -v '^Sources/WatchShared/CompanyStore.swift:'; then
   echo "::error::path literals are relative to APIConfig.BASE_URL, which already ends in /api"
   exit 1
 fi

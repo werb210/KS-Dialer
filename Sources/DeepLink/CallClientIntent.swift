@@ -40,7 +40,7 @@ enum BorealClientLookup {
 
     static func callURL(phone: String) -> URL? {
         var components = URLComponents()
-        components.scheme = "borealdialer"
+        components.scheme = "ksdialer"
         components.host = "call"
         components.queryItems = [URLQueryItem(name: "phone", value: phone), URLQueryItem(name: "start", value: "true")]
         return components.url
@@ -50,8 +50,8 @@ enum BorealClientLookup {
 #if canImport(AppIntents)
 @available(iOS 16.0, *)
 struct CallBorealClientIntent: AppIntent {
-    static var title: LocalizedStringResource = "Call a Boreal Client"
-    static var description = IntentDescription("Finds a client in Boreal and calls them from your Boreal line.")
+    static var title: LocalizedStringResource = "Call a Client"
+    static var description = IntentDescription("Finds a client in the CRM and calls them from your office line.")
     static var openAppWhenRun: Bool = true
 
     @Parameter(title: "Client", requestValueDialog: "Who do you want to call?")
@@ -60,18 +60,18 @@ struct CallBorealClientIntent: AppIntent {
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
         guard TokenStorage.shared.getToken() != nil else {
-            return .result(dialog: "Open Boreal Dialer and sign in first.")
+            return .result(dialog: "Open the dialer app and sign in first.")
         }
         let matches: [CRMContact]
         do {
             matches = try await BorealClientLookup.search(client)
         } catch {
-            return .result(dialog: "I couldn't reach Boreal right now.")
+            return .result(dialog: "I couldn't reach the server right now.")
         }
         guard let match = BorealClientLookup.best(matches, for: client),
               let phone = BorealClientLookup.e164(match.callablePhone),
               let url = BorealClientLookup.callURL(phone: phone) else {
-            return .result(dialog: "I couldn't find a phone number for \(client) in Boreal.")
+            return .result(dialog: "I couldn't find a phone number for \(client) in the CRM.")
         }
         DeepLinkCoordinator.shared.receive(url)
         return .result(dialog: "Calling \(match.displayName).")

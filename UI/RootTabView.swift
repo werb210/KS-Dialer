@@ -89,7 +89,7 @@ struct RootTabView: View {
         .sheet(item: $actions.voiceNote) { target in
             VoiceNoteSheet(target: target)
         }
-        .alert("Boreal", isPresented: Binding(
+        .alert("Dialer", isPresented: Binding(
             get: { actions.message != nil },
             set: { if !$0 { actions.message = nil } }
         )) {

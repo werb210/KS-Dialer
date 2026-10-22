@@ -66,7 +66,7 @@ enum StaffWidgetActionStore {
 
     static func reloadSurfaces() {
 #if canImport(WidgetKit)
-        WidgetCenter.shared.reloadTimelines(ofKind: "BorealDialerWidget")
+        WidgetCenter.shared.reloadTimelines(ofKind: "KSDialerWidget")
         if #available(iOS 18.0, *) {
             ControlCenter.shared.reloadControls(ofKind: StaffWidgetActionKinds.busyControl)
         }
@@ -75,7 +75,7 @@ enum StaffWidgetActionStore {
 }
 
 enum StaffWidgetActionKinds {
-    static let busyControl = "financial.boreal.dialer.control.busy"
+    static let busyControl = "com.keystone.dialer.control.busy"
 }
 
 /// Set by the app at launch. Nil inside the widget extension.
@@ -95,8 +95,8 @@ enum StaffWidgetActionBridge {
 #if canImport(AppIntents)
 @available(iOS 17.0, *)
 struct SetBorealBusyIntent: AppIntent, LiveActivityIntent {
-    static var title: LocalizedStringResource = "Set Boreal Busy or Available"
-    static var description = IntentDescription("Marks you Busy (calls go to voicemail) or Available on your Boreal line.")
+    static var title: LocalizedStringResource = "Set Busy or Available"
+    static var description = IntentDescription("Marks you Busy (calls go to voicemail) or Available on your office line.")
     static var isDiscoverable: Bool = false
 
     @Parameter(title: "Busy")
@@ -113,7 +113,7 @@ struct SetBorealBusyIntent: AppIntent, LiveActivityIntent {
 
 @available(iOS 17.0, *)
 struct CompleteBorealTaskIntent: AppIntent, LiveActivityIntent {
-    static var title: LocalizedStringResource = "Complete a Boreal Task"
+    static var title: LocalizedStringResource = "Complete a Task"
     static var isDiscoverable: Bool = false
 
     @Parameter(title: "Task")
@@ -132,7 +132,7 @@ struct CompleteBorealTaskIntent: AppIntent, LiveActivityIntent {
 /// The Control Center / Action Button toggle (iOS 18).
 @available(iOS 18.0, *)
 struct BorealBusyControlIntent: SetValueIntent, LiveActivityIntent {
-    static var title: LocalizedStringResource = "Boreal Busy"
+    static var title: LocalizedStringResource = "Dialer Busy"
     static var isDiscoverable: Bool = false
 
     @Parameter(title: "Busy")

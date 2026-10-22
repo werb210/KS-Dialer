@@ -65,12 +65,12 @@ public final class WatchBridge: NSObject {
             activate()
             return false
         }
-        let payload = WatchPayload.encode(WatchEnrollMessage(oneTimeCode: code), under: WatchPayload.enrollKey)
+        let payload = WatchPayload.encode(WatchEnrollMessage(oneTimeCode: code, serverURL: CompanyStore.apiBaseURL), under: WatchPayload.enrollKey)
         guard !payload.isEmpty else { return false }
         // BOREAL_DIALER_WATCH_AUTOLINK_v341 - persist the latest code until the
         // Watch app becomes available, while retaining immediate delivery.
         var context = payload
-        context["boreal.watch.enroll.at"] = Date().timeIntervalSince1970
+        context["keystone.watch.enroll.at"] = Date().timeIntervalSince1970
         try? session.updateApplicationContext(context)
         if session.isPaired, session.isWatchAppInstalled { session.transferUserInfo(payload) }
         return true
@@ -96,7 +96,7 @@ public final class WatchBridge: NSObject {
         guard let session else { return "This iPhone does not support Apple Watch connectivity." }
         if session.activationState != .activated { return "Still connecting to your Apple Watch. Try again in a moment." }
         if !session.isPaired { return "No Apple Watch is paired with this iPhone." }
-        return "Ready. Open Boreal on your Watch and it will link itself."
+        return "Ready. Open the dialer on your Watch and it will link itself."
     }
 #else
     public func activate() {}
@@ -152,7 +152,7 @@ extension WatchBridge: WCSessionDelegate {
         Task { @MainActor in
             do {
                 let code = try await WatchEnrollment.shared.mintCode()
-                replyHandler(WatchPayload.encode(WatchEnrollMessage(oneTimeCode: code), under: WatchPayload.enrollKey))
+                replyHandler(WatchPayload.encode(WatchEnrollMessage(oneTimeCode: code, serverURL: CompanyStore.apiBaseURL), under: WatchPayload.enrollKey))
             } catch { replyHandler([:]) }
         }
     }

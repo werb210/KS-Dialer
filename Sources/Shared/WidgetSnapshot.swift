@@ -14,7 +14,8 @@ struct WidgetSnapshot: Codable, Equatable {
 }
 
 enum WidgetSnapshotStore {
-    static let appGroup = "group.com.borealfinancial.dialer"
+    // KEYSTONE_CONFIG_v1 - from KS_APP_GROUP in Config/Keystone.xcconfig, via each target's Info.plist.
+    static let appGroup = (Bundle.main.object(forInfoDictionaryKey: "KSAppGroupIdentifier") as? String) ?? "group.com.keystone.dialer"
     private static let snapshotKey = "widget.recentContacts.v1"
 
     static func load() -> WidgetSnapshot {
@@ -36,7 +37,7 @@ enum WidgetSnapshotStore {
     static func clear() {
         UserDefaults(suiteName: appGroup)?.removeObject(forKey: snapshotKey)
 #if canImport(WidgetKit)
-        WidgetCenter.shared.reloadTimelines(ofKind: "BorealDialerWidget")
+        WidgetCenter.shared.reloadTimelines(ofKind: "KSDialerWidget")
 #endif
     }
 
@@ -50,7 +51,7 @@ enum WidgetSnapshotStore {
               let data = try? JSONEncoder().encode(snapshot) else { return }
         defaults.set(data, forKey: snapshotKey)
 #if canImport(WidgetKit)
-        WidgetCenter.shared.reloadTimelines(ofKind: "BorealDialerWidget")
+        WidgetCenter.shared.reloadTimelines(ofKind: "KSDialerWidget")
 #endif
     }
 }

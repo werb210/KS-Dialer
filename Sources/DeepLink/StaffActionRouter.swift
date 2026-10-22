@@ -12,7 +12,7 @@ enum StaffActionLink: String, Equatable, Identifiable {
     var id: String { rawValue }
 
     static func parse(_ url: URL) -> StaffActionLink? {
-        guard url.scheme?.lowercased() == "borealdialer",
+        guard url.scheme?.lowercased() == "ksdialer",
               url.host?.lowercased() == "action",
               url.query == nil, url.fragment == nil else { return nil }
         let parts = url.path.split(separator: "/")
@@ -62,7 +62,7 @@ final class StaffActionRouter: ObservableObject {
                 }
             }
         } catch {
-            message = "Couldn't reach Boreal right now."
+            message = "Couldn't reach the server right now."
         }
     }
 }

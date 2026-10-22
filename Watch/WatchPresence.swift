@@ -53,9 +53,9 @@ protocol WatchPresenceTransport: Sendable {
 }
 
 struct WatchPresenceHTTPTransport: WatchPresenceTransport {
+    // KEYSTONE_COMPANY_CODE_v1 - the company server the iPhone linked this Watch to.
     private var base: String {
-        (Bundle.main.object(forInfoDictionaryKey: "BorealAPIBaseURL") as? String)
-            ?? "https://server.boreal.financial/api"
+        CompanyStore.apiBaseURL ?? "https://company-not-set.invalid/api"
     }
 
     private func request(_ path: String, method: String, body: Data?) async throws -> Data {

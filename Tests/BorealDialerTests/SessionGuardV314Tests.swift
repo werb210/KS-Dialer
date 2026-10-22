@@ -3,9 +3,15 @@ import XCTest
 
 // BOREAL_DIALER_SESSION_GUARD_v314
 final class SessionGuardV314Tests: XCTestCase {
+    // KEYSTONE_COMPANY_CODE_v1 - the main server is the stored company's server.
+    override func setUp() {
+        super.setUp()
+        KeystoneTestCompany.install()
+    }
+
     func testOnlyTheMainServerCanEndTheSession() {
-        XCTAssertTrue(SessionGuard.isMainServer(URL(string: "https://server.boreal.financial/api/voice/token")!))
-        XCTAssertFalse(SessionGuard.isMainServer(URL(string: APIConfig.BI_BASE_URL + "/crm/contacts")!))
+        XCTAssertTrue(SessionGuard.isMainServer(URL(string: "https://ks.example.com/api/voice/token")!))
+        XCTAssertFalse(SessionGuard.isMainServer(URL(string: "https://other.example.com/api/crm/contacts")!))
     }
 
     func testSignOutReasonIsShownOnce() {
@@ -16,6 +22,6 @@ final class SessionGuardV314Tests: XCTestCase {
 
     func testWatchEnrollmentPathIsNotDoubled() throws {
         let request = try APIClient.shared.makeRequest(path: "/watch/auth/enrollment", method: "POST")
-        XCTAssertEqual(request.url?.absoluteString, "https://server.boreal.financial/api/watch/auth/enrollment")
+        XCTAssertEqual(request.url?.absoluteString, "https://ks.example.com/api/watch/auth/enrollment")
     }
 }

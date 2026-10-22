@@ -19,7 +19,7 @@ struct WatchRootView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Not paired").font(.caption).foregroundStyle(.orange)
                         Text(pairingError).font(.caption2).foregroundStyle(.secondary)
-                        Text("Open Boreal on your iPhone").font(.caption2).foregroundStyle(.secondary)
+                        Text("Open the dialer on your iPhone").font(.caption2).foregroundStyle(.secondary)
                     }
                 }
                 // BOREAL_DIALER_v804_WATCH - icons on every row; the three call
@@ -36,7 +36,7 @@ struct WatchRootView: View {
                 NavigationLink(destination: WatchDispositionView()) { menuLabel("Log Outcome", "square.and.pencil") }
                 NavigationLink(destination: WatchNotificationsView()) { menuLabel("Notifications", "bell.fill") }
                 NavigationLink(destination: WatchAccountView()) { menuLabel("Account", "person.crop.circle.badge.checkmark") }
-            }.navigationTitle("Boreal")
+            }.navigationTitle("Dialer")
             // BOREAL_DIALER_WATCH_FACE_v371 - complication taps land on the screen they name.
             .navigationDestination(isPresented: complicationBinding("dial")) { WatchDialView() }
             .navigationDestination(isPresented: complicationBinding("recents")) { WatchRecentsView() }
@@ -616,9 +616,9 @@ struct WatchAccountView: View {
                 get: { fallback },
                 set: { enabled in fallback = enabled; updateRouting(enabled) }
             ))
-            Text("When your iPhone isn't reachable, Boreal calls ring your cell number, which rings this Watch. Press 1 to accept.")
+            Text("When your iPhone isn't reachable, calls ring your cell number, which rings this Watch. Press 1 to accept.")
                 .font(.caption2).foregroundStyle(.secondary)
-            Text("Your cell is the number you sign in to Boreal Dialer with on your iPhone; signing in with the text code verifies it.")
+            Text("Your cell is the number you sign in to the dialer with on your iPhone; signing in with the text code verifies it.")
                 .font(.caption2).foregroundStyle(.secondary)
             Button("Sign Out", role: .destructive) { Task { do { try await WatchAuthService.shared.logout(client: WatchAPIClient()); await MainActor.run { store.clearSensitiveData(); WatchStandaloneRouting.lastConfirmed = false; fallback = false; linked = false; message = "Signed out on this Watch" } } catch { await MainActor.run { message = "Could not revoke this Watch. Try again." } } } }
         } else {
@@ -665,7 +665,7 @@ struct WatchAccountView: View {
         // BOREAL_DIALER_v820_WATCH - remember what the server accepted and confirm it on the wrist.
         await MainActor.run {
             WatchStandaloneRouting.lastConfirmed = enabled
-            message = enabled ? "On. Boreal calls will ring this Watch when your iPhone isn't reachable." : "Off"
+            message = enabled ? "On. Calls will ring this Watch when your iPhone isn't reachable." : "Off"
         }
     } catch let error as WatchServiceError { await MainActor.run { fallback = false; WatchStandaloneRouting.lastConfirmed = false; message = error.safeMessage } } catch { await MainActor.run { fallback = false; message = "Unable to update fallback" } } } }
 }
@@ -839,7 +839,7 @@ struct WatchManualLinkView: View {
 // BOREAL_DIALER_v820_WATCH - last standalone-routing state BF-Server accepted (PUT /watch/devices/:id/standalone-routing
 // is write-only). Cleared with the Watch session on sign-out.
 enum WatchStandaloneRouting {
-    private static let key = "boreal.watch.standaloneRouting.confirmed"
+    private static let key = "keystone.watch.standaloneRouting.confirmed"
     static var lastConfirmed: Bool {
         get { UserDefaults.standard.bool(forKey: key) }
         set { UserDefaults.standard.set(newValue, forKey: key) }

@@ -78,14 +78,14 @@ final class NoteDictation: ObservableObject {
             SFSpeechRecognizer.requestAuthorization { continuation.resume(returning: $0 == .authorized) }
         }
         guard speechAllowed else {
-            error = "Allow Speech Recognition for Boreal Dialer in Settings to dictate notes."
+            error = "Allow Speech Recognition for this app in Settings to dictate notes."
             return
         }
         let micAllowed = await withCheckedContinuation { continuation in
             AVAudioSession.sharedInstance().requestRecordPermission { continuation.resume(returning: $0) }
         }
         guard micAllowed else {
-            error = "Allow the microphone for Boreal Dialer in Settings to dictate notes."
+            error = "Allow the microphone for this app in Settings to dictate notes."
             return
         }
         guard let recognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-CA")) ?? SFSpeechRecognizer(),

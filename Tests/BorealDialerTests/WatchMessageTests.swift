@@ -25,8 +25,8 @@ final class WatchMessageTests: XCTestCase {
 
     func testAResolvedNameWinsOverTheRawNumber() {
         let event = WatchEvent(kind: .newMessage, callId: "x",
-                               displayName: "Andrew Polturak", handle: "+15550000000")
-        XCTAssertEqual(event.subtitle, "Andrew Polturak")
+                               displayName: "Sam Lee", handle: "+15550000000")
+        XCTAssertEqual(event.subtitle, "Sam Lee")
     }
 
     // BOREAL_DIALER_WATCH_NAME_v56

@@ -5,7 +5,7 @@ import XCTest
 final class TeamPhaseCTests: XCTestCase {
     func testCardKeysFromPortalLinks() {
         let id = "0f8fad5b-d9cb-469f-a165-70867728950e"
-        let text = "see https://staff.boreal.financial/crm/contacts/\(id) and /applications/\(id.uppercased()) and /crm/contacts/\(id)"
+        let text = "see https://portal.example.com/crm/contacts/\(id) and /applications/\(id.uppercased()) and /crm/contacts/\(id)"
         XCTAssertEqual(TeamCardRefs.keys(in: text), ["contact:\(id)", "application:\(id)"])
         XCTAssertEqual(TeamCardRefs.keys(in: "no links here"), [])
     }

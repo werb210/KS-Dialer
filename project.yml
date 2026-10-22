@@ -1,13 +1,16 @@
 # BOREAL_DIALER_XCODEGEN_v1
+# KEYSTONE_CONFIG_v1 - every bundle id, the App Group, display names, the KS-Ops URL and the signing team come from
+# Config/Keystone.xcconfig (KS_* settings). Set the real values there once the company's Apple account exists; nothing
+# in this file or the Swift sources needs to change. Target and module names (BorealDialer*) are internal only and
+# are kept so the build, the tests and the CI scripts are unchanged.
 # The repo had no .xcodeproj at all, so nothing could open it in Xcode and no
 # runner could build it. XcodeGen builds the project from this file, which means
 # the project is reviewable in git instead of an unmergeable pbxproj blob.
 name: BorealDialer
 options:
-  # BOREAL_DIALER_v815_COMPANY_BUNDLE_ID - the dialer ships from the company Apple account (2630108 Alberta Ltd, team
-  # 76VAY7UJKJ). financial.boreal.dialer is held by another Apple account, so every target now uses
-  # com.borealfinancial.dialer[.*] and the app group group.com.borealfinancial.dialer (all registered Oct 16 2026).
-  bundleIdPrefix: com.borealfinancial
+  # KEYSTONE_CONFIG_v1 - only the test bundles use this prefix; every shipping target sets
+  # PRODUCT_BUNDLE_IDENTIFIER from KS_APP_BUNDLE_ID in Config/Keystone.xcconfig.
+  bundleIdPrefix: com.keystone
   deploymentTarget:
     iOS: "16.0"
     watchOS: "9.0"
@@ -21,6 +24,11 @@ options:
 settings:
   base:
     CURRENT_PROJECT_VERSION: "1"
+
+# KEYSTONE_CONFIG_v1 - KS_APP_BUNDLE_ID, KS_APP_GROUP, KS_APP_DISPLAY_NAME, KS_SHORT_NAME, KS_OPS_URL, DEVELOPMENT_TEAM.
+configFiles:
+  Debug: Config/Keystone.xcconfig
+  Release: Config/Keystone.xcconfig
 
 packages:
   TwilioVoice:
@@ -75,7 +83,7 @@ targets:
       # Config/Info.plist is silently overwritten, which is how the microphone
       # usage string went missing and TCC killed the process on first call.
       properties:
-        CFBundleDisplayName: Boreal Dialer
+        CFBundleDisplayName: $(KS_APP_DISPLAY_NAME)
         CFBundleShortVersionString: "1.0"
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         UILaunchScreen: {}
@@ -83,7 +91,7 @@ targets:
           - voip
           - audio
           - remote-notification
-        NSMicrophoneUsageDescription: Boreal Dialer needs the microphone to place and receive calls.
+        NSMicrophoneUsageDescription: $(KS_APP_DISPLAY_NAME) needs the microphone to place and receive calls.
         NSUserActivityTypes:
           - INStartCallIntent
           # BOREAL_DIALER_v822_CARPLAY - texts and client messages are communication notifications.
@@ -91,7 +99,7 @@ targets:
         # BOREAL_DIALER_v822_CARPLAY - Siri messaging is handled in the app (SiriMessageHandler).
         INIntentsSupported:
           - INSendMessageIntent
-        NSSiriUsageDescription: Siri reads your Boreal texts aloud in the car and sends your replies from your Boreal line.
+        NSSiriUsageDescription: Siri reads your client texts aloud in the car and sends your replies from your office line.
         # BOREAL_DIALER_v822_CARPLAY - the car screen. SwiftUI keeps its own iPhone window scene; only the CarPlay
         # role is configured here, and it goes to CarPlaySceneDelegate.
         UIApplicationSceneManifest:
@@ -101,16 +109,16 @@ targets:
               - UISceneClassName: CPTemplateApplicationScene
                 UISceneConfigurationName: CarPlay
                 UISceneDelegateClassName: $(PRODUCT_MODULE_NAME).CarPlaySceneDelegate
-        NSFaceIDUsageDescription: Boreal Dialer uses Face ID to unlock your signed-in session.
+        NSFaceIDUsageDescription: $(KS_APP_DISPLAY_NAME) uses Face ID to unlock your signed-in session.
         # BOREAL_DIALER_v823 - voice notes after a call, and scanning business cards into new contacts.
-        NSSpeechRecognitionUsageDescription: Boreal Dialer turns your spoken notes into text for the client's Boreal timeline.
-        NSCameraUsageDescription: Boreal Dialer uses the camera to scan business cards into new contacts.
+        NSSpeechRecognitionUsageDescription: $(KS_APP_DISPLAY_NAME) turns your spoken notes into text for the client's timeline.
+        NSCameraUsageDescription: $(KS_APP_DISPLAY_NAME) uses the camera to scan business cards into new contacts.
         ITSAppUsesNonExemptEncryption: false
         NSSupportsLiveActivities: true
         CFBundleURLTypes:
-          - CFBundleURLName: com.borealfinancial.dialer
+          - CFBundleURLName: $(KS_APP_BUNDLE_ID)
             CFBundleURLSchemes:
-              - borealdialer
+              - ksdialer
         # BOREAL_DIALER_SHARE_TO_BOREAL_v319 - appear in the share sheet for client documents.
         LSSupportsOpeningDocumentsInPlace: false
         CFBundleDocumentTypes:
@@ -130,19 +138,23 @@ targets:
         NSAppTransportSecurity:
           NSAllowsArbitraryLoads: false
         SentryDSN: ""
+        # KEYSTONE_CONFIG_v1 - read by the Swift code (CompanyStore, WidgetSnapshotStore, CallDirectoryManager).
+        KSAppGroupIdentifier: $(KS_APP_GROUP)
+        KSOpsURL: $(KS_OPS_URL)
+        KSCallDirectoryExtensionIdentifier: $(KS_APP_BUNDLE_ID).calldirectory
     entitlements:
       path: Config/BorealDialer.entitlements
       properties:
         aps-environment: development
         com.apple.security.application-groups:
-          - group.com.borealfinancial.dialer
+          - $(KS_APP_GROUP)
         # BOREAL_DIALER_v821 - client alerts (missed call, voicemail, texts, client messages, handoffs) are
-        # time-sensitive, so a Focus that allows Boreal Dialer lets them through. Needs the Time Sensitive
-        # Notifications capability on the com.borealfinancial.dialer App ID.
+        # time-sensitive, so a Focus that allows the dialer lets them through. Needs the Time Sensitive
+        # Notifications capability on the app's App ID.
         com.apple.developer.usernotifications.time-sensitive: true
         # BOREAL_DIALER_v822_CARPLAY - CarPlay Communication App (assigned by Apple Oct 17 2026), Siri messaging, and
         # communication notifications (Siri reads texts aloud). Enable CarPlay Communication, SiriKit and
-        # Communication Notifications on the com.borealfinancial.dialer App ID.
+        # Communication Notifications on the app's App ID (CarPlay needs Apple's approval for the new App ID).
         com.apple.developer.carplay-communication: true
         com.apple.developer.siri: true
         com.apple.developer.usernotifications.communication: true
@@ -167,7 +179,7 @@ targets:
       - target: BorealDialerWatch
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.borealfinancial.dialer
+        PRODUCT_BUNDLE_IDENTIFIER: $(KS_APP_BUNDLE_ID)
         # BOREAL_DIALER_PRODUCT_NAME_v49
         # PRODUCT_NAME was 'Boreal Dialer', with a space, which diverged from
         # the target name in two places that both only mattered once the test
@@ -234,16 +246,17 @@ targets:
     info:
       path: Watch/Info.plist
       properties:
-        CFBundleDisplayName: Boreal
+        CFBundleDisplayName: $(KS_SHORT_NAME)
         CFBundleShortVersionString: "1.0"
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         # BOREAL_DIALER_v816_WATCH_ICON - App Store Connect refused the upload: the Watch app had no icon
         # (90391 / 90713). Watch/Assets.xcassets/AppIcon (the dialer icon, 1024 single-size) is now in the target.
         CFBundleIconName: AppIcon
         WKApplication: true
-        WKCompanionAppBundleIdentifier: com.borealfinancial.dialer
+        WKCompanionAppBundleIdentifier: $(KS_APP_BUNDLE_ID)
         WKRunsIndependentlyOfCompanionApp: true
-        BorealAPIBaseURL: https://server.boreal.financial/api
+        # KEYSTONE_COMPANY_CODE_v1 - no fixed server: the iPhone sends its company's server with the link code.
+        KSAppGroupIdentifier: $(KS_APP_GROUP)
     dependencies:
       - target: BorealWatchWidget
     entitlements:
@@ -251,10 +264,10 @@ targets:
       properties:
         aps-environment: development
         com.apple.security.application-groups:
-          - group.com.borealfinancial.dialer
+          - $(KS_APP_GROUP)
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.borealfinancial.dialer.watchkitapp
+        PRODUCT_BUNDLE_IDENTIFIER: $(KS_APP_BUNDLE_ID).watchkitapp
         PRODUCT_MODULE_NAME: BorealDialerWatch
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         SWIFT_VERSION: 5.9
@@ -281,9 +294,10 @@ targets:
     info:
       path: WatchWidget/Info.plist
       properties:
-        CFBundleDisplayName: Boreal
+        CFBundleDisplayName: $(KS_SHORT_NAME)
         CFBundleShortVersionString: "1.0"
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        KSAppGroupIdentifier: $(KS_APP_GROUP) # KEYSTONE_CONFIG_v1
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     # The provider reads UserDefaults(suiteName:) for its snapshot; without the
@@ -293,10 +307,10 @@ targets:
       path: WatchWidget/BorealWatchWidget.entitlements
       properties:
         com.apple.security.application-groups:
-          - group.com.borealfinancial.dialer
+          - $(KS_APP_GROUP)
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.borealfinancial.dialer.watchkitapp.widget
+        PRODUCT_BUNDLE_IDENTIFIER: $(KS_APP_BUNDLE_ID).watchkitapp.widget
         PRODUCT_MODULE_NAME: BorealWatchWidget
         SWIFT_VERSION: "5.9"
         TARGETED_DEVICE_FAMILY: "4"
@@ -330,23 +344,24 @@ targets:
     info:
       path: LiveActivity/Info.plist
       properties:
-        CFBundleDisplayName: Boreal Call
+        CFBundleDisplayName: $(KS_SHORT_NAME) Call
         CFBundleShortVersionString: "1.0"
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        KSAppGroupIdentifier: $(KS_APP_GROUP) # KEYSTONE_CONFIG_v1
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     entitlements:
       path: LiveActivity/BorealCallLiveActivity.entitlements
       properties:
         com.apple.security.application-groups:
-          - group.com.borealfinancial.dialer
+          - $(KS_APP_GROUP)
     attributes:
       SystemCapabilities:
         com.apple.ApplicationGroups.iOS:
           enabled: 1
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.borealfinancial.dialer.liveactivity
+        PRODUCT_BUNDLE_IDENTIFIER: $(KS_APP_BUNDLE_ID).liveactivity
         GENERATE_INFOPLIST_FILE: NO
 
   BorealDialerCallDirectory:
@@ -358,9 +373,10 @@ targets:
     info:
       path: CallDirectory/Info.plist
       properties:
-        CFBundleDisplayName: Boreal Caller ID
+        CFBundleDisplayName: $(KS_APP_DISPLAY_NAME) Caller ID
         CFBundleShortVersionString: "1.0"
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        KSAppGroupIdentifier: $(KS_APP_GROUP) # KEYSTONE_CONFIG_v1
         NSExtension:
           NSExtensionPointIdentifier: com.apple.callkit.call-directory
           NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).CallDirectoryProvider
@@ -368,14 +384,14 @@ targets:
       path: CallDirectory/BorealDialerCallDirectory.entitlements
       properties:
         com.apple.security.application-groups:
-          - group.com.borealfinancial.dialer
+          - $(KS_APP_GROUP)
     attributes:
       SystemCapabilities:
         com.apple.ApplicationGroups.iOS:
           enabled: 1
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.borealfinancial.dialer.calldirectory
+        PRODUCT_BUNDLE_IDENTIFIER: $(KS_APP_BUNDLE_ID).calldirectory
         SWIFT_VERSION: 5.9
         TARGETED_DEVICE_FAMILY: "1"
         CODE_SIGN_STYLE: Automatic
@@ -397,7 +413,7 @@ targets:
     info:
       path: NotificationService/Info.plist
       properties:
-        CFBundleDisplayName: Boreal Messages
+        CFBundleDisplayName: $(KS_SHORT_NAME) Messages
         CFBundleShortVersionString: "1.0"
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         NSExtension:
@@ -408,7 +424,7 @@ targets:
               - INSendMessageIntent
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.borealfinancial.dialer.notificationservice
+        PRODUCT_BUNDLE_IDENTIFIER: $(KS_APP_BUNDLE_ID).notificationservice
         SWIFT_VERSION: 5.9
         TARGETED_DEVICE_FAMILY: "1"
         CODE_SIGN_STYLE: Automatic

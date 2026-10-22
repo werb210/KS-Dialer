@@ -2,12 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>BorealAPIBaseURL</key>
-	<string>https://server.boreal.financial/api</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Boreal</string>
+	<string>$(KS_SHORT_NAME)</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -27,8 +25,10 @@
 	<key>WKApplication</key>
 	<true/>
 	<key>WKCompanionAppBundleIdentifier</key>
-	<string>com.borealfinancial.dialer</string>
+	<string>$(KS_APP_BUNDLE_ID)</string>
 	<key>WKRunsIndependentlyOfCompanionApp</key>
 	<true/>
+	<key>KSAppGroupIdentifier</key>
+	<string>$(KS_APP_GROUP)</string>
 </dict>
 </plist>

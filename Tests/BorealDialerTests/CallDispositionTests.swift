@@ -158,9 +158,9 @@ final class BorealIntentTextTests: XCTestCase {
     private let now = Date(timeIntervalSince1970: 1_800_000_000)
 
     func testNoMeetingOrPastMeeting() {
-        XCTAssertEqual(BorealIntentText.nextMeeting(nil, now: now), "You have no upcoming meetings in Boreal.")
+        XCTAssertEqual(BorealIntentText.nextMeeting(nil, now: now), "You have no upcoming meetings.")
         XCTAssertEqual(BorealIntentText.nextMeeting((title: "ABC", startsAt: now.addingTimeInterval(-60)), now: now),
-                       "You have no upcoming meetings in Boreal.")
+                       "You have no upcoming meetings.")
     }
 
     func testUpcomingMeetingNamesTheMeeting() {
@@ -169,7 +169,7 @@ final class BorealIntentTextTests: XCTestCase {
     }
 
     func testDueCountsReadNaturally() {
-        XCTAssertEqual(BorealIntentText.due(missedCalls: 0, tasksDue: 0), "Nothing is due in Boreal right now.")
+        XCTAssertEqual(BorealIntentText.due(missedCalls: 0, tasksDue: 0), "Nothing is due right now.")
         XCTAssertEqual(BorealIntentText.due(missedCalls: 1, tasksDue: 0), "You have 1 missed call.")
         XCTAssertEqual(BorealIntentText.due(missedCalls: 2, tasksDue: 3), "You have 2 missed calls and 3 tasks due.")
     }

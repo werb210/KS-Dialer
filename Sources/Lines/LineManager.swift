@@ -8,11 +8,11 @@ final class LineManager: ObservableObject {
     @Published var activeLine: Line
 
     let availableLines: [Line] = [
-        // BOREAL_DIALER_SINGLE_LINE_v1 - only the line in use. Re-add BI/SLF here
-        // to restore the phone line switcher.
+        // KEYSTONE_SINGLE_LINE_v1 - Keystone has exactly one line per company; there is no line switcher.
+        // baseURL is informational only: requests read APIConfig.BASE_URL, which follows the stored company.
         Line(
             id: "BF",
-            name: "Boreal Financial",
+            name: "Main line",
             baseURL: URL(string: APIConfig.BASE_URL)!,
             wsURL: nil,
             silo: .bf

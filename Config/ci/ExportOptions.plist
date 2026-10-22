@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<!-- BOREAL_DIALER_v815_IOS_UPLOAD - export settings for .github/workflows/ios-upload.yml: sign with the company team
-     (2630108 Alberta Ltd, 76VAY7UJKJ) and upload straight to App Store Connect. -->
+<!-- v815_IOS_UPLOAD - export settings for .github/workflows/ios-upload.yml: sign with the team and upload straight
+     to App Store Connect. KEYSTONE_CONFIG_v1 - teamID is left empty here; the workflow fills it in from
+     DEVELOPMENT_TEAM in Config/Keystone.xcconfig. -->
 <plist version="1.0">
 <dict>
 	<key>method</key>
@@ -9,7 +10,7 @@
 	<key>destination</key>
 	<string>upload</string>
 	<key>teamID</key>
-	<string>76VAY7UJKJ</string>
+	<string></string>
 	<key>signingStyle</key>
 	<string>automatic</string>
 	<key>manageAppVersionAndBuildNumber</key>

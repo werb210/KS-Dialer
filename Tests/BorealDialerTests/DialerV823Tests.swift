@@ -5,14 +5,14 @@ import XCTest
 
 final class StaffActionsV823Tests: XCTestCase {
     func testActionLinks() {
-        XCTAssertEqual(StaffActionLink.parse(URL(string: "borealdialer://action/voice-note")!), .voiceNote)
-        XCTAssertEqual(StaffActionLink.parse(URL(string: "borealdialer://action/next-follow-up")!), .nextFollowUp)
-        XCTAssertNil(StaffActionLink.parse(URL(string: "borealdialer://action/delete-everything")!))
-        XCTAssertNil(StaffActionLink.parse(URL(string: "borealdialer://action/voice-note?x=1")!))
-        XCTAssertNil(StaffActionLink.parse(URL(string: "borealdialer://call?phone=%2B14035551234")!))
-        XCTAssertNil(StaffActionLink.parse(URL(string: "https://boreal.financial/action/voice-note")!))
+        XCTAssertEqual(StaffActionLink.parse(URL(string: "ksdialer://action/voice-note")!), .voiceNote)
+        XCTAssertEqual(StaffActionLink.parse(URL(string: "ksdialer://action/next-follow-up")!), .nextFollowUp)
+        XCTAssertNil(StaffActionLink.parse(URL(string: "ksdialer://action/delete-everything")!))
+        XCTAssertNil(StaffActionLink.parse(URL(string: "ksdialer://action/voice-note?x=1")!))
+        XCTAssertNil(StaffActionLink.parse(URL(string: "ksdialer://call?phone=%2B14035551234")!))
+        XCTAssertNil(StaffActionLink.parse(URL(string: "https://example.com/action/voice-note")!))
         // The call links are untouched by the new host.
-        XCTAssertNil(DialerDeepLinkParser.parse(URL(string: "borealdialer://action/voice-note")!))
+        XCTAssertNil(DialerDeepLinkParser.parse(URL(string: "ksdialer://action/voice-note")!))
     }
 
     @MainActor
@@ -100,7 +100,7 @@ final class BusinessCardV823Tests: XCTestCase {
         XCTAssertTrue(BusinessCardParser.isPersonName("Mary-Anne O'Neil"))
         XCTAssertFalse(BusinessCardParser.isPersonName("Sales Manager"))
         XCTAssertFalse(BusinessCardParser.isPersonName("jane smith"))
-        XCTAssertFalse(BusinessCardParser.isPersonName("Boreal Capital Group"))
+        XCTAssertFalse(BusinessCardParser.isPersonName("Northwind Capital Group"))
     }
 
     @MainActor

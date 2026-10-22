@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Boreal Dialer</string>
+	<string>$(KS_APP_DISPLAY_NAME)</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -22,10 +22,10 @@
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>com.borealfinancial.dialer</string>
+			<string>$(KS_APP_BUNDLE_ID)</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>borealdialer</string>
+				<string>ksdialer</string>
 			</array>
 		</dict>
 	</array>
@@ -39,13 +39,13 @@
 		<false/>
 	</dict>
 	<key>NSFaceIDUsageDescription</key>
-	<string>Boreal Dialer uses Face ID to unlock your signed-in session.</string>
+	<string>$(KS_APP_DISPLAY_NAME) uses Face ID to unlock your signed-in session.</string>
 	<key>NSUserActivityTypes</key>
 	<array>
 		<string>INStartCallIntent</string>
 	</array>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Boreal Dialer needs the microphone to place and receive calls.</string>
+	<string>$(KS_APP_DISPLAY_NAME) needs the microphone to place and receive calls.</string>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
 	<key>SentryDSN</key>
@@ -58,5 +58,11 @@
 	</array>
 	<key>UILaunchScreen</key>
 	<dict/>
+	<key>KSAppGroupIdentifier</key>
+	<string>$(KS_APP_GROUP)</string>
+	<key>KSOpsURL</key>
+	<string>$(KS_OPS_URL)</string>
+	<key>KSCallDirectoryExtensionIdentifier</key>
+	<string>$(KS_APP_BUNDLE_ID).calldirectory</string>
 </dict>
 </plist>
