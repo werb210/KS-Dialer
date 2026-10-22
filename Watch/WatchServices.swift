@@ -1,0 +1,354 @@
+import Foundation
+import Network
+import Security
+import SwiftUI
+import WatchKit
+
+enum WatchServiceError: Error, Equatable {
+    case offline, notAuthenticated, invalidLogin, invalidResponse
+    case serverCapabilityUnavailable, duplicateRequest, invalidDestination, cancelled
+    case server(code: String, message: String)
+    // BOREAL_DIALER_v820_WATCH - calling through the nearby iPhone: it could not be reached (fall back to the server
+    // bridge), or it answered and refused (busy, signed out, microphone) - shown, not retried.
+    case companionUnavailable
+    case companionRefused(reason: String)
+
+    var safeMessage: String {
+        switch self {
+        case .server(let code, let message):
+            // BOREAL_DIALER_v820_WATCH - say how to fix it, not just what is missing.
+            return code == "callback_not_verified"
+                ? "Your cell number isn't verified yet. Sign in to Boreal Dialer on your iPhone with the text code sent to your cell, then try again."
+                : (message.isEmpty ? "The server could not complete the request." : message)
+        case .companionRefused(let reason): return WatchPhoneCallReply.message(for: reason)
+        case .companionUnavailable: return "Your iPhone isn't reachable"
+        case .offline: return "Network unavailable"
+        case .notAuthenticated, .invalidLogin: return "Link this Apple Watch to continue"
+        case .invalidDestination: return "Enter a valid phone number"
+        default: return "Request unavailable"
+        }
+    }
+}
+
+struct WatchSession: Codable, Equatable, Sendable {
+    let accessToken: String
+    let refreshToken: String
+    let expiresAt: Date
+    let deviceId: String
+}
+
+protocol WatchCredentialStore {
+    func read() -> String?
+    func write(_ token: String)
+    func clear()
+}
+
+final class WatchKeychainCredentialStore: WatchCredentialStore {
+    private let service = "financial.boreal.dialer.watch.auth"
+    private let account = "watch-session"
+    func read() -> String? {
+        let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service, kSecAttrAccount as String: account,
+            kSecReturnData as String: true, kSecMatchLimit as String: kSecMatchLimitOne]
+        var value: AnyObject?
+        guard SecItemCopyMatching(query as CFDictionary, &value) == errSecSuccess,
+              let data = value as? Data else { return nil }
+        return data.base64EncodedString()
+    }
+    func write(_ value: String) {
+        clear()
+        guard let data = Data(base64Encoded: value) else { return }
+        let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service, kSecAttrAccount as String: account,
+            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly,
+            kSecValueData as String: data]
+        SecItemAdd(query as CFDictionary, nil)
+    }
+    func clear() { SecItemDelete([kSecClass as String: kSecClassGenericPassword,
+        kSecAttrService as String: service, kSecAttrAccount as String: account] as CFDictionary) }
+}
+
+actor WatchAuthService {
+    static let shared = WatchAuthService()
+    private let store: WatchCredentialStore
+    private(set) var session: WatchSession?
+    var token: String? { session?.accessToken }
+
+    init(store: WatchCredentialStore = WatchKeychainCredentialStore()) {
+        self.store = store
+        if let raw = store.read(), let data = Data(base64Encoded: raw) {
+            session = try? Self.decoder.decode(WatchSession.self, from: data)
+        }
+    }
+    func restore() -> Bool { session != nil }
+    func save(_ value: WatchSession) throws {
+        let data = try JSONEncoder().encode(value)
+        store.write(data.base64EncodedString()); session = value
+    }
+    // Retained for source compatibility with older tests; production linking uses link(oneTimeCode:).
+    func establishSession(verifiedToken: String) throws {
+        guard !verifiedToken.isEmpty else { throw WatchServiceError.invalidLogin }
+        try save(WatchSession(accessToken: verifiedToken, refreshToken: "legacy", expiresAt: .distantFuture, deviceId: "legacy"))
+    }
+    func link(oneTimeCode: String, client: WatchAPIClient? = nil) async throws {
+        guard oneTimeCode.count == 8, oneTimeCode.allSatisfy(\.isNumber) else { throw WatchServiceError.invalidLogin }
+        let api = try client ?? WatchAPIClient(auth: self)
+        struct Device: Encodable { let platform = "watchos"; let name: String }
+        struct Body: Encodable { let oneTimeCode: String; let device: Device }
+        let body = try JSONEncoder().encode(Body(oneTimeCode: oneTimeCode,
+            device: Device(name: WKInterfaceDevice.current().name)))
+        let data = try await api.unauthenticated(path: "/watch/auth/link", method: "POST", body: body)
+        let linked = try Self.decoder.decode(WatchSession.self, from: data)
+        try save(linked)
+        try await api.registerDevice()
+        try await WatchPushTokenStore.shared.uploadIfPossible(client: api)
+    }
+    func refresh(using client: WatchAPIClient) async throws {
+        guard let current = session else { throw WatchServiceError.notAuthenticated }
+        struct Body: Encodable { let refreshToken, deviceId: String }
+        do {
+            let data = try await client.unauthenticated(path: "/watch/auth/refresh", method: "POST",
+                body: JSONEncoder().encode(Body(refreshToken: current.refreshToken, deviceId: current.deviceId)))
+            let rotated = try Self.decoder.decode(WatchSession.self, from: data)
+            try save(rotated)
+        } catch WatchServiceError.invalidLogin {
+            clear()
+            throw WatchServiceError.invalidLogin
+        } catch {
+            throw error
+        }
+    }
+    func clear() { store.clear(); session = nil }
+    func logout(client: WatchAPIClient) async throws {
+        guard let current = session else { clear(); return }
+        _ = try await client.request(path: "/watch/devices/\(current.deviceId)/session", method: "DELETE")
+        clear(); WatchPushTokenStore.shared.clear()
+    }
+    /// Local-only compatibility helper. User-facing sign out uses the revoking overload.
+    func logout() { clear() }
+    static let decoder: JSONDecoder = { let d = JSONDecoder(); d.dateDecodingStrategy = .iso8601; return d }()
+}
+
+struct WatchAPIClient: @unchecked Sendable {
+    // BOREAL_DIALER_WATCH_TRANSPORT_SEAM_v27 - injectable transport so tests can
+    // supply canned responses (URLProtocol mocking does not intercept on the
+    // watchOS simulator, which is why WatchAuthReliabilityTests were failing).
+    typealias Transport = @Sendable (URLRequest) async throws -> (Data, URLResponse)
+    let baseURL: URL; let session: URLSession; let auth: WatchAuthService
+    let transport: Transport
+    init(baseURL: URL, session: URLSession = .shared, auth: WatchAuthService = .shared, transport: Transport? = nil) throws {
+        guard baseURL.scheme == "https" else { throw WatchServiceError.invalidResponse }
+        self.baseURL = baseURL; self.session = session; self.auth = auth
+        self.transport = transport ?? { req in try await session.data(for: req) }
+    }
+    init(session: URLSession = .shared, auth: WatchAuthService = .shared, transport: Transport? = nil) throws {
+        guard let value = Bundle.main.object(forInfoDictionaryKey: "BorealAPIBaseURL") as? String,
+              let url = URL(string: value) else { throw WatchServiceError.invalidResponse }
+        try self.init(baseURL: url, session: session, auth: auth, transport: transport)
+    }
+    func unauthenticated(path: String, method: String = "GET", body: Data? = nil,
+                         query: [URLQueryItem] = [], headers: [String: String] = [:]) async throws -> Data {
+        try await execute(path: path, method: method, body: body, query: query, headers: headers, token: nil)
+    }
+    func request(path: String, method: String = "GET", body: Data? = nil, line: BorealLine? = nil,
+                 query: [URLQueryItem] = [], headers: [String: String] = [:], retry401: Bool = true) async throws -> Data {
+        guard var current = await auth.session else { throw WatchServiceError.notAuthenticated }
+        if current.expiresAt.timeIntervalSinceNow < 60 {
+            try await auth.refresh(using: self)
+            guard let refreshed = await auth.session else { throw WatchServiceError.notAuthenticated }
+            current = refreshed
+        }
+        let effectiveHeaders = headers.merging(line.map { ["X-Silo": $0.rawValue] } ?? [:]) { a, _ in a }
+        do { return try await execute(path: path, method: method, body: body, query: query,
+            headers: effectiveHeaders, token: current.accessToken) }
+        catch WatchServiceError.invalidLogin where retry401 {
+            try await auth.refresh(using: self)
+            guard let fresh = await auth.session else { throw WatchServiceError.notAuthenticated }
+            return try await execute(path: path, method: method, body: body, query: query, headers: effectiveHeaders, token: fresh.accessToken)
+        }
+    }
+    private func execute(path: String, method: String, body: Data?, query: [URLQueryItem], headers: [String:String], token: String?) async throws -> Data {
+        var components = URLComponents(url: baseURL.appendingPathComponent(path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))), resolvingAgainstBaseURL: false)
+        components?.queryItems = query.isEmpty ? nil : query
+        guard let url = components?.url, url.scheme == "https" else { throw WatchServiceError.invalidResponse }
+        var req = URLRequest(url: url); req.httpMethod = method; req.httpBody = body
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        if let token { req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") }
+        headers.forEach { req.setValue($0.value, forHTTPHeaderField: $0.key) }
+        do {
+            let (data, response) = try await transport(req)
+            guard let http = response as? HTTPURLResponse else { throw WatchServiceError.invalidResponse }
+            if http.statusCode == 401 { throw WatchServiceError.invalidLogin }
+            guard (200..<300).contains(http.statusCode) else {
+                struct Envelope: Decodable { struct Detail: Decodable { let code, message: String }; let error: Detail }
+                if let value = try? JSONDecoder().decode(Envelope.self, from: data) { throw WatchServiceError.server(code: value.error.code, message: value.error.message) }
+                throw WatchServiceError.invalidResponse
+            }
+            return data
+        } catch let error as WatchServiceError { throw error }
+        catch { throw WatchServiceError.offline }
+    }
+    func registerDevice() async throws {
+        guard let value = await auth.session else { throw WatchServiceError.notAuthenticated }
+        struct Body: Encodable { let platform, appVersion, name: String }
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown"
+        _ = try await request(path: "/watch/devices/\(value.deviceId)", method: "PUT", body: JSONEncoder().encode(Body(platform: "watchos", appVersion: version, name: WKInterfaceDevice.current().name)))
+    }
+}
+
+// BOREAL_DIALER_WATCH_CALLBACKS_v219
+// The calls this person owes today. Served by GET /api/watch/callbacks
+// (BF_SERVER_WATCH_CALLBACKS_v216), which only returns tasks that have a contact
+// with a phone number - so every row here is dialable, which is the whole point
+// of putting it on a wrist.
+struct WatchCallback: Codable, Identifiable, Equatable, Sendable {
+    let id: String
+    let title: String
+    let dueAt: Date?
+    let overdue: Bool
+    let contactId: String?
+    let contactName: String?
+    let number: String
+
+    private enum CodingKeys: String, CodingKey {
+        case id, title, dueAt, overdue, contactId, contactName, number
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = (try? c.decode(String.self, forKey: .id)) ?? UUID().uuidString
+        title = (try? c.decode(String.self, forKey: .title)) ?? "Call"
+        overdue = (try? c.decode(Bool.self, forKey: .overdue)) ?? false
+        contactId = try? c.decode(String.self, forKey: .contactId)
+        contactName = try? c.decode(String.self, forKey: .contactName)
+        number = (try? c.decode(String.self, forKey: .number)) ?? ""
+        // The server sends an ISO timestamp; a row with an unparseable date is
+        // still worth showing - it just loses its time label.
+        if let raw = try? c.decode(String.self, forKey: .dueAt) {
+            dueAt = ISO8601DateFormatter().date(from: raw)
+                ?? ISO8601DateFormatter.withFractionalSeconds.date(from: raw)
+        } else {
+            dueAt = nil
+        }
+    }
+}
+
+extension ISO8601DateFormatter {
+    static let withFractionalSeconds: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return f
+    }()
+}
+
+private struct WatchCallbacksEnvelope: Decodable {
+    let items: [WatchCallback]
+    let count: Int
+}
+
+protocol WatchCallbacksService {
+    func fetch(line: BorealLine, limit: Int) async throws -> [WatchCallback]
+}
+
+struct DirectWatchCallbacksService: WatchCallbacksService {
+    private let client: WatchAPIClient?
+    private let makeClient: () throws -> WatchAPIClient
+
+    init(client: WatchAPIClient? = nil,
+         makeClient: @escaping () throws -> WatchAPIClient = { try WatchAPIClient() }) {
+        self.client = client
+        self.makeClient = makeClient
+    }
+
+    func fetch(line: BorealLine, limit: Int = 20) async throws -> [WatchCallback] {
+        let api = try client ?? makeClient()
+        let data = try await api.request(
+            path: "/watch/callbacks",
+            line: line,
+            query: [
+                .init(name: "line", value: line.rawValue),
+                .init(name: "limit", value: String(limit))
+            ]
+        )
+        return try JSONDecoder().decode(WatchCallbacksEnvelope.self, from: data).items
+    }
+}
+
+protocol WatchDirectoryService { func search(_ query: String, line: BorealLine, limit: Int) async throws -> [ContactSummary] }
+extension WatchDirectoryService { func search(_ query: String, limit: Int) async throws -> [ContactSummary] { try await search(query, line: .BF, limit: limit) } }
+struct DirectWatchDirectoryService: WatchDirectoryService {
+    private let client: WatchAPIClient?
+    private let makeClient: () throws -> WatchAPIClient
+    init(client: WatchAPIClient? = nil, makeClient: @escaping () throws -> WatchAPIClient = { try WatchAPIClient() }) {
+        self.client = client
+        self.makeClient = makeClient
+    }
+    func search(_ query: String, line: BorealLine, limit: Int = 10) async throws -> [ContactSummary] {
+        let q = query.trimmingCharacters(in: .whitespacesAndNewlines); guard q.count >= 2 else { return [] }
+        let api = try client ?? makeClient()
+        let data = try await api.request(path: "/watch/contacts", line: line, query: [.init(name:"q", value:q), .init(name:"line", value:line.rawValue), .init(name:"limit", value:String(min(10,max(1,limit))))])
+        struct Response: Decodable { let items: [ContactSummary] }
+        return try WatchAuthService.decoder.decode(Response.self, from: data).items
+    }
+}
+protocol WatchRecentsService { func fetch(line: BorealLine, limit: Int) async throws -> [WatchRecentCall] }
+extension WatchRecentsService { func fetch(limit: Int) async throws -> [WatchRecentCall] { try await fetch(line: .BF, limit: limit) } }
+struct DirectWatchRecentsService: WatchRecentsService {
+    private let client: WatchAPIClient?
+    private let makeClient: () throws -> WatchAPIClient
+    init(client: WatchAPIClient? = nil, makeClient: @escaping () throws -> WatchAPIClient = { try WatchAPIClient() }) {
+        self.client = client
+        self.makeClient = makeClient
+    }
+    func fetch(line: BorealLine, limit: Int = 25) async throws -> [WatchRecentCall] {
+        struct DTO: Decodable { let id, number: String; let contactName: String?; let direction: WatchCallDirection; let occurredAt: Date; let line: BorealLine; let status: String? }
+        struct Response: Decodable { let items: [DTO] }
+        let api = try client ?? makeClient()
+        let data = try await api.request(path: "/watch/calls/recent", line: line, query: [.init(name:"line",value:line.rawValue),.init(name:"limit",value:String(min(25,max(1,limit))))])
+        return try WatchAuthService.decoder.decode(Response.self, from:data).items.map { WatchRecentCall(id:$0.id,name:$0.contactName,number:$0.number,direction:$0.direction,occurredAt:$0.occurredAt,line:$0.line,status:$0.status) }
+    }
+}
+
+struct WatchSMSTemplate: Decodable, Identifiable, Sendable {
+    let id: String
+    let name: String
+    let body: String
+}
+
+protocol WatchSMSService {
+    func fetchTemplates() async throws -> [WatchSMSTemplate]
+    func send(to: String, body: String) async throws
+}
+
+struct DirectWatchSMSService: WatchSMSService {
+    private let client: WatchAPIClient?
+    private let makeClient: () throws -> WatchAPIClient
+
+    init(client: WatchAPIClient? = nil,
+         makeClient: @escaping () throws -> WatchAPIClient = { try WatchAPIClient() }) {
+        self.client = client
+        self.makeClient = makeClient
+    }
+
+    func fetchTemplates() async throws -> [WatchSMSTemplate] {
+        struct Response: Decodable { let templates: [WatchSMSTemplate] }
+        let api = try client ?? makeClient()
+        let data = try await api.request(path: "/watch/sms-templates")
+        return try WatchAuthService.decoder.decode(Response.self, from: data).templates
+    }
+
+    func send(to: String, body: String) async throws {
+        struct Body: Encodable { let to, body: String }
+        let api = try client ?? makeClient()
+        _ = try await api.request(
+            path: "/watch/sms",
+            method: "POST",
+            body: JSONEncoder().encode(Body(to: to, body: body))
+        )
+    }
+}
+
+enum WatchNetworkState { case online, offline, transitioning }
+final class WatchNetworkMonitor: ObservableObject { @Published private(set) var state: WatchNetworkState = .transitioning; private let monitor=NWPathMonitor(); private let queue=DispatchQueue(label:"watch.network"); func start(){ monitor.pathUpdateHandler={ [weak self] p in DispatchQueue.main.async { self?.state = p.status == .satisfied ? .online:.offline }}; monitor.start(queue:queue)}; deinit{monitor.cancel()} }
+enum WatchOperatingMode: Equatable { case companion, standalone }
+enum WatchPresence { case available, offline, standaloneCellular, companionAvailable, busy }

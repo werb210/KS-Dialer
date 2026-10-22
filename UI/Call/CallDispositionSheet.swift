@@ -1,0 +1,204 @@
+// BOREAL_DIALER_POST_CALL_DISPOSITION_v201
+// Shown once a call ends. Deliberately one tap for the common case: pick an
+// outcome and it is saved. Skip is always available - a dialog staff cannot
+// dismiss is a dialog they will learn to dread, and an unrecorded call is better
+// than a wrong one recorded to escape the sheet.
+import SwiftUI
+
+struct CallDispositionSheet: View {
+    let callRef: String
+    let contactName: String?
+    let durationText: String?
+    var onFinished: (CallDisposition?) -> Void
+
+    @State private var saving: CallDisposition?
+    @State private var failure: String?
+    // BOREAL_DIALER_CALL_SUMMARY_v246
+    @State private var summary: String?
+    @State private var summaryUnavailable = false
+    // BOREAL_DIALER_SUGGESTED_TASKS_v254
+    @State private var suggestions: [SuggestedCallTask] = []
+    @State private var suggestionContactId: String?
+    @State private var addedSuggestions: Set<String> = []
+    @State private var addingSuggestion: String?
+    @State private var suggestionError: String?
+    // BOREAL_DIALER_v831_DIALER_POLISH - one Idempotency-Key per outcome and per suggested task, shared by the direct
+    // send and its offline copy.
+    @State private var outcomeKey = UUID()
+    @State private var taskKeys: [String: UUID] = [:]
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(contactName ?? "Call complete")
+                            .font(.headline)
+                        if let durationText {
+                            Text(durationText)
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
+
+                // BOREAL_DIALER_CALL_SUMMARY_v246
+                // BOREAL_DIALER_v821 - the summary, next steps, "Open contact" and "Task created" come from
+                // GET /calls/{callSid}/summary, polled every 5 s for up to 2 minutes. The v246 poll below now only
+                // feeds the suggested follow-ups.
+                Section {
+                    AfterCallSummaryCard(callSid: callRef)
+                }
+
+                // BOREAL_DIALER_SUGGESTED_TASKS_v254
+                if !suggestions.isEmpty {
+                    Section("Suggested follow-ups") {
+                        ForEach(suggestions) { task in
+                            HStack {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(task.title)
+                                    Text(task.detail)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                Spacer()
+                                if addedSuggestions.contains(task.id) {
+                                    Label("Added", systemImage: "checkmark.circle.fill")
+                                        .labelStyle(.iconOnly)
+                                        .foregroundStyle(.green)
+                                } else if addingSuggestion == task.id {
+                                    ProgressView()
+                                } else {
+                                    Button("Add") { Task { await addSuggestion(task) } }
+                                        .buttonStyle(.bordered)
+                                        .disabled(addingSuggestion != nil)
+                                }
+                            }
+                        }
+                        if let suggestionError {
+                            Text(suggestionError).font(.footnote).foregroundStyle(.red)
+                        }
+                    }
+                }
+
+                Section("How did it go?") {
+                    ForEach(CallDisposition.ordered) { option in
+                        Button {
+                            Task { await save(option) }
+                        } label: {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(option.label)
+                                        .foregroundStyle(.primary)
+                                    if let note = option.followUpNote {
+                                        Text(note)
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                }
+                                Spacer()
+                                if saving == option {
+                                    ProgressView()
+                                }
+                            }
+                        }
+                        .disabled(saving != nil)
+                    }
+                }
+
+                if let failure {
+                    Section {
+                        Text(failure)
+                            .font(.footnote)
+                            .foregroundStyle(.red)
+                    }
+                }
+            }
+            .task { await pollSummary() } // BOREAL_DIALER_CALL_SUMMARY_v246
+            .navigationTitle("Call outcome")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Skip") {
+                        onFinished(nil)
+                        dismiss()
+                    }
+                    .disabled(saving != nil)
+                }
+            }
+        }
+    }
+
+    // BOREAL_DIALER_CALL_SUMMARY_v246 - cancelled automatically when the sheet closes.
+    private func pollSummary() async {
+        var attempt = 0
+        var latest: CallSummaryResult?
+        while CallSummaryService.shouldKeepPolling(latest, attempt: attempt) {
+            attempt += 1
+            latest = try? await CallSummaryService.fetch(callSid: callRef)
+            if let text = latest?.summary, latest?.status == "ready", !text.isEmpty {
+                summary = text // BOREAL_DIALER_v821 - no longer displayed; AfterCallSummaryCard shows the summary.
+                suggestions = latest?.suggestedTasks ?? [] // BOREAL_DIALER_SUGGESTED_TASKS_v254
+                suggestionContactId = latest?.contactId
+                return
+            }
+            if latest?.status == "none" {
+                summaryUnavailable = true
+                return
+            }
+            do {
+                try await Task.sleep(nanoseconds: CallSummaryService.pollIntervalNanoseconds)
+            } catch {
+                return
+            }
+        }
+        summaryUnavailable = true
+    }
+
+    // BOREAL_DIALER_SUGGESTED_TASKS_v254
+    private func addSuggestion(_ task: SuggestedCallTask) async {
+        addingSuggestion = task.id
+        suggestionError = nil
+        let key = taskKeys[task.id] ?? UUID()
+        taskKeys[task.id] = key
+        do {
+            try await SuggestedTaskService.add(task, contactId: suggestionContactId, key: key)
+            addedSuggestions.insert(task.id)
+        } catch {
+            // BOREAL_DIALER_OFFLINE_v303
+            if OfflineQueue.isOffline(error),
+               let data = try? JSONSerialization.data(withJSONObject: SuggestedTaskService.body(for: task, contactId: suggestionContactId)) {
+                OfflineQueue.shared.enqueue(label: "Task", path: "/tasks", body: data, id: key)
+                addedSuggestions.insert(task.id)
+            } else {
+                suggestionError = "Could not add that task. Try again."
+            }
+        }
+        addingSuggestion = nil
+    }
+
+    private func save(_ option: CallDisposition) async {
+        saving = option
+        failure = nil
+        do {
+            _ = try await CallDispositionService.record(callRef: callRef, disposition: option, key: outcomeKey)
+            onFinished(option)
+            dismiss()
+        } catch {
+            // BOREAL_DIALER_OFFLINE_v303 - no signal: keep the outcome on the phone and move on.
+            if OfflineQueue.isOffline(error) {
+                CallDispositionService.queueOffline(callRef: callRef, disposition: option, key: outcomeKey)
+                onFinished(option)
+                dismiss()
+                return
+            }
+            // Stay on the sheet. Losing the outcome because the network blipped
+            // is the failure staff would actually notice.
+            failure = error.localizedDescription
+            saving = nil
+            outcomeKey = UUID() // BOREAL_DIALER_v831_DIALER_POLISH - the refused attempt's key is not reused
+        }
+    }
+}
