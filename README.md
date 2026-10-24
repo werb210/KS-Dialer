@@ -5,25 +5,34 @@ and Control Center widgets, a Call Directory (caller ID) extension, a notificati
 aloud in CarPlay) and an independent Apple Watch app with its own complications. There is no iPad target.
 
 Keystone is licensed to many companies and each one runs its own KS-server. KS-Dialer is one App Store app for all of
-them: staff enter their **company code** once, the app looks it up in the KS-Ops directory, and from then on every API
-call goes to that company's server.
+them: staff sign in with their **work email or mobile number**, the app asks the KS-Ops staff directory which company
+they work for, and from then on every API call goes to that company's server.
 
-## How the company code works
+## How staff find their company (KS_STAFF_DIRECTORY_v1)
 
-1. First launch (or after **Account > Switch company**) shows **Enter your company code**.
-2. The app calls `GET {KSOpsURL}/api/directory/{company_code}` (codes are 3-32 characters, `a-z`, `0-9`, `-`).
-   - `200 { company_code, company_name, server_url, client_url, portal_url, logo_url, primary_color }`
-   - `404 { error: "unknown_company" }` shows "We couldn't find that company code".
-3. The answer is stored in the App Group `UserDefaults` (`KS_APP_GROUP`), which the widgets, Live Activity and Call
+1. First launch (or after **Account > Switch company**) shows **Sign in - Enter your work email or mobile number**.
+2. The app calls `POST {KSOpsURL}/api/staff-directory/lookup { identifier }` and gets
+   `200 { matches: [{ name, server_url }] }`. Each company's KS-server keeps KS-Ops up to date with hashes of its
+   active staff's emails and phone numbers (KS-server `src/staffDirectory/sync.ts`).
+   - One match: the app goes straight on. Several: "You work with more than one company" and a list to pick from.
+   - No match: "We couldn't find a Keystone account for that email or number."
+   - 429: "Too many tries. Please wait a few minutes and try again."
+3. The company's logo, colour and staff portal address come from its own server (`GET {server_url}/api/licensee`).
+   The result is stored in the App Group `UserDefaults` (`KS_APP_GROUP`), which the widgets, Live Activity and Call
    Directory extension already share (`Sources/WatchShared/CompanyStore.swift`).
 4. Every request goes to `{server_url}/api` (`APIConfig.BASE_URL`), including the team chat websocket. Requests still
    send `X-Silo: BF`; KS-server has a single silo.
 5. The sign-in screen shows the company's name and logo, and uses its `primary_color` as the accent (neutral navy and
-   blue otherwise). Staff then sign in with their work number and a text code, as before.
+   blue otherwise). Staff then sign in with their work number and a text code, as before; a mobile number typed in
+   step 1 is filled in.
 6. **Switch company** signs out (revoking push and Face ID on the current server while the token still works) and
    clears the stored company. A sign-in token that survives a reinstall without a company is discarded.
-7. The Apple Watch has no company-code screen: the iPhone sends its `{server_url}/api` with the Watch link code, and
-   the Watch keeps it in its own App Group. Linking to a different server clears the Watch's old session.
+7. The Apple Watch has no company screen: the iPhone sends its `{server_url}/api` with the Watch link code, and the
+   Watch keeps it in its own App Group. Linking to a different server clears the Watch's old session.
+
+**Hidden fallback:** "Enter company code instead" on the first screen opens the old company-code screen
+(`GET {KSOpsURL}/api/directory/{company_code}`, codes are 3-32 characters `a-z`, `0-9`, `-`). Installs that already
+have a company keep it.
 
 ## Keystone setup
 

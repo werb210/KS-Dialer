@@ -9,6 +9,14 @@
 // and keeps the answer in the App Group UserDefaults (the same container the widgets, Live Activity and Call Directory
 // already read). Every API request then goes to {server_url}/api. "Switch company" in Account clears it.
 //
+// KS_STAFF_DIRECTORY_v1 - staff no longer type a company code. The sign-in screen asks for a work email or mobile
+// number and KS-Ops answers which company (or companies) that person works for:
+//
+//   POST {KSOpsURL}/api/staff-directory/lookup { identifier } -> 200 { matches: [{ name, server_url }] }
+//
+// The company's logo, colour and staff portal address then come from that company's own server
+// (GET {server_url}/api/licensee, public). The company-code lookup above stays as a hidden fallback.
+//
 // Compiled into the iPhone app and the Watch app (Sources/WatchShared). The Watch cannot read the iPhone's App Group,
 // so the iPhone sends the API base URL with the Watch link code (WatchEnrollMessage.serverURL) and the Watch keeps it
 // in its own App Group with adoptServerURL(_:).
@@ -58,6 +66,65 @@ public enum CompanyLookupError: Error, Equatable {
         case .unknownCompany: return "We couldn't find that company code. Check it with your administrator."
         case .offline: return "No connection. Try again when you're back online."
         case .unavailable: return "The company directory isn't responding. Please try again."
+        }
+    }
+}
+
+/// KS_STAFF_DIRECTORY_v1 - one company a staff member works for, as KS-Ops returns it.
+public struct StaffDirectoryMatch: Codable, Equatable, Sendable, Identifiable {
+    public let name: String
+    public let serverURL: String
+    public var id: String { serverURL }
+
+    enum CodingKeys: String, CodingKey {
+        case name
+        case serverURL = "server_url"
+    }
+
+    public init(name: String, serverURL: String) {
+        self.name = name
+        self.serverURL = serverURL
+    }
+}
+
+struct StaffLookupResponse: Decodable {
+    let matches: [StaffDirectoryMatch]
+}
+
+/// The public part of a company server's GET /api/licensee that the sign-in screen uses.
+public struct PublicLicensee: Decodable, Equatable, Sendable {
+    public struct URLs: Decodable, Equatable, Sendable {
+        public let portal: String?
+    }
+    public let companyName: String?
+    public let logoURL: String?
+    public let primaryColor: String?
+    public let urls: URLs?
+
+    enum CodingKeys: String, CodingKey {
+        case companyName = "company_name"
+        case logoURL = "logo_url"
+        case primaryColor = "primary_color"
+        case urls
+    }
+}
+
+struct PublicLicenseeResponse: Decodable {
+    let licensee: PublicLicensee?
+}
+
+public enum StaffLookupError: Error, Equatable {
+    case invalidIdentifier
+    case rateLimited
+    case offline
+    case unavailable
+
+    public var message: String {
+        switch self {
+        case .invalidIdentifier: return "Enter your work email or your mobile number."
+        case .rateLimited: return "Too many tries. Please wait a few minutes and try again."
+        case .offline: return "No connection. Try again when you're back online."
+        case .unavailable: return "We couldn't reach Keystone. Please try again."
         }
     }
 }
@@ -159,6 +226,101 @@ public enum CompanyStore {
         }
         let (data, response) = result
         return try decodeDirectoryResponse(data: data, statusCode: (response as? HTTPURLResponse)?.statusCode ?? 0)
+    }
+
+    // MARK: KS_STAFF_DIRECTORY_v1 - find the company from a work email or mobile number
+
+    /// "+1 (403) 555-0199" / "4035550199" -> "+14035550199"; nil unless a North American number.
+    public static func phoneIdentifier(_ raw: String) -> String? {
+        let text = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty, !text.contains("@") else { return nil }
+        let allowed = CharacterSet(charactersIn: "0123456789+(). -")
+        guard text.unicodeScalars.allSatisfy({ allowed.contains($0) }) else { return nil }
+        let digits = text.filter(\.isNumber)
+        if digits.count == 10 { return "+1" + digits }
+        if digits.count == 11, digits.hasPrefix("1") { return "+" + digits }
+        return nil
+    }
+
+    /// A trimmed email or a +1 phone number; nil when it is neither.
+    public static func normalizedIdentifier(_ raw: String) -> String? {
+        let text = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        if text.contains("@") {
+            let parts = text.split(separator: "@", omittingEmptySubsequences: false)
+            guard text.count <= 254, parts.count == 2, !parts[0].isEmpty, parts[1].contains("."),
+                  !parts[1].hasPrefix("."), !parts[1].hasSuffix("."), !text.contains(" ") else { return nil }
+            return text.lowercased()
+        }
+        return phoneIdentifier(text)
+    }
+
+    public static var staffLookupURL: URL? { URL(string: opsURL + "/api/staff-directory/lookup") }
+
+    /// The companies this email or mobile number belongs to (name and server address only).
+    public static func lookupStaff(identifier raw: String, session: URLSession = .shared) async throws -> [StaffDirectoryMatch] {
+        guard let identifier = normalizedIdentifier(raw), let url = staffLookupURL else { throw StaffLookupError.invalidIdentifier }
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.timeoutInterval = 20
+        request.httpBody = try? JSONSerialization.data(withJSONObject: ["identifier": identifier])
+        let result: (Data, URLResponse)
+        do {
+            result = try await session.data(for: request)
+        } catch let error as URLError where error.code == .notConnectedToInternet || error.code == .networkConnectionLost {
+            throw StaffLookupError.offline
+        } catch {
+            throw StaffLookupError.unavailable
+        }
+        let (data, response) = result
+        return try decodeStaffLookupResponse(data: data, statusCode: (response as? HTTPURLResponse)?.statusCode ?? 0)
+    }
+
+    /// Separate from lookupStaff(identifier:) so tests can check it without a network. Servers that are not https are
+    /// dropped.
+    public static func decodeStaffLookupResponse(data: Data, statusCode: Int) throws -> [StaffDirectoryMatch] {
+        if statusCode == 429 { throw StaffLookupError.rateLimited }
+        guard (200..<300).contains(statusCode),
+              let body = try? JSONDecoder().decode(StaffLookupResponse.self, from: data) else { throw StaffLookupError.unavailable }
+        return body.matches.filter { match in
+            guard let url = URL(string: match.serverURL), url.scheme == "https", url.host != nil else { return false }
+            return true
+        }
+    }
+
+    /// The company profile for a directory match, with the logo, colour and staff portal address from the company's
+    /// own server when it answers (best effort: the name and server are enough to sign in).
+    public static func profile(for match: StaffDirectoryMatch, session: URLSession = .shared) async -> CompanyProfile {
+        var base = match.serverURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        while base.hasSuffix("/") { base.removeLast() }
+        if base.hasSuffix("/api") { base.removeLast(4) }
+        guard let url = URL(string: base + "/api/licensee") else { return profile(for: match, licensee: nil) }
+        var request = URLRequest(url: url)
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.timeoutInterval = 10
+        guard let result = try? await session.data(for: request),
+              let status = (result.1 as? HTTPURLResponse)?.statusCode, (200..<300).contains(status) else {
+            return profile(for: match, licensee: nil)
+        }
+        let licensee = (try? JSONDecoder().decode(PublicLicenseeResponse.self, from: result.0))?.licensee
+        return profile(for: match, licensee: licensee)
+    }
+
+    /// Separate so tests can check it without a network. The directory's name wins over the server's.
+    public static func profile(for match: StaffDirectoryMatch, licensee: PublicLicensee?) -> CompanyProfile {
+        let https: (String?) -> String? = { raw in
+            guard let raw, let url = URL(string: raw), url.scheme == "https", url.host != nil else { return nil }
+            return raw
+        }
+        return CompanyProfile(
+            companyCode: "",
+            companyName: match.name.isEmpty ? (licensee?.companyName ?? match.serverURL) : match.name,
+            serverURL: match.serverURL,
+            logoURL: https(licensee?.logoURL),
+            primaryColor: licensee?.primaryColor,
+            portalURL: https(licensee?.urls?.portal)
+        )
     }
 
     /// Separate from lookup(code:) so tests can check it without a network.
