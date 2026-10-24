@@ -1,5 +1,7 @@
 // KEYSTONE_COMPANY_CODE_v1
-// First screen on a new install: "Enter your company code". The code is resolved through the KS-Ops directory
+// KS_STAFF_DIRECTORY_v1 - no longer the first screen: StaffLookupView finds the company from a work email or mobile
+// number, and this screen is the hidden fallback behind "Enter company code instead".
+// The company-code screen: The code is resolved through the KS-Ops directory
 // (CompanyStore.lookup) and the result is kept in the App Group; LoginView then signs in against that company's
 // server. Account > Switch company clears it and brings this screen back.
 import SwiftUI
@@ -52,6 +54,8 @@ struct CompanyLogoView: View {
 
 struct CompanyCodeView: View {
     var onResolved: (CompanyProfile) -> Void
+    /// KS_STAFF_DIRECTORY_v1 - back to "Work email or mobile number".
+    var onBack: (() -> Void)?
 
     @State private var code = ""
     @State private var busy = false
@@ -90,7 +94,7 @@ struct CompanyCodeView: View {
                     .multilineTextAlignment(.center)
                 Text("Your administrator gives you this code. You only enter it once.")
                     .font(.subheadline)
-                    .foregroundColor(.white.opacity(0.6))
+                    .foregroundColor(.white.opacity(0.75))
                     .multilineTextAlignment(.center)
 
                 TextField("company-code", text: $code)
@@ -127,8 +131,15 @@ struct CompanyCodeView: View {
                 if let errorMessage {
                     Text(errorMessage)
                         .font(.footnote)
-                        .foregroundColor(.red)
+                        .foregroundColor(Color(red: 1, green: 0.55, blue: 0.55))
                         .multilineTextAlignment(.center)
+                }
+
+                if let onBack {
+                    Button("Use my email or mobile number") { onBack() }
+                        .font(.footnote)
+                        .foregroundColor(.white.opacity(0.7))
+                        .disabled(busy)
                 }
 
                 Spacer()

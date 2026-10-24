@@ -16,7 +16,8 @@ struct LoginView: View {
     private enum Field { case phone, code }
     @FocusState private var focused: Field?
 
-    // KEYSTONE_COMPANY_CODE_v1 - the company this phone signs in to; nil shows the company-code screen first.
+    // KEYSTONE_COMPANY_CODE_v1 / KS_STAFF_DIRECTORY_v1 - the company this phone signs in to; nil shows the
+    // "work email or mobile number" screen first (StaffLookupView; the company code is its hidden fallback).
     @State private var company: CompanyProfile? = CompanyStore.current
 
     // BOREAL_DIALER_LOGIN_STYLE_v26 - neutral navy field; the accent is the company's primary colour when it has one.
@@ -56,7 +57,10 @@ struct LoginView: View {
     var body: some View {
         Group {
             if company == nil {
-                CompanyCodeView { resolved in company = resolved }
+                StaffLookupView { resolved, typedPhone in
+                    company = resolved
+                    if let typedPhone, phone.isEmpty { phone = typedPhone }
+                }
             } else {
                 signIn
             }
@@ -181,12 +185,13 @@ struct LoginView: View {
                         .multilineTextAlignment(.center)
                 }
 
-                // KEYSTONE_COMPANY_CODE_v1 - wrong company, or a new one: back to the company code.
-                Button("Not \(company?.companyName ?? "your company")? Change company code") {
+                // KEYSTONE_COMPANY_CODE_v1 / KS_STAFF_DIRECTORY_v1 - wrong company, or a new one: back to the
+                // "work email or mobile number" screen.
+                Button("Not with \(company?.companyName ?? "this company")? Change company") {
                     CompanyStore.clear()
                 }
                 .font(.footnote)
-                .foregroundColor(.white.opacity(0.6))
+                .foregroundColor(.white.opacity(0.75))
                 .disabled(busy)
 
                 Spacer()

@@ -134,8 +134,9 @@ struct AccountSheet: View {
                         CompanyLogoView(company: CompanyStore.current, size: 32)
                         VStack(alignment: .leading, spacing: 2) {
                             Text(CompanyStore.current?.companyName ?? "No company").rowTitle()
-                            if let code = CompanyStore.current?.companyCode {
-                                Text("Company code: \(code)").rowSubtitle()
+                            // KS_STAFF_DIRECTORY_v1 - the server's address, not the company code (staff no longer use it).
+                            if let host = CompanyStore.current.flatMap({ URL(string: $0.serverURL)?.host }) {
+                                Text(host).rowSubtitle()
                             }
                         }
                         Spacer()
@@ -227,7 +228,7 @@ struct AccountSheet: View {
                 Text("You'll need your phone number and a code to sign back in. Any call in progress will end.")
             }
             // KEYSTONE_COMPANY_CODE_v1 - signs out (revoking this phone on the current company's server while the token
-            // still works), then forgets the company so the next screen asks for a company code.
+            // still works), then forgets the company so the next screen asks for a work email or mobile number.
             .confirmationDialog(
                 "Switch company?",
                 isPresented: $confirmingSwitchCompany,
@@ -242,7 +243,7 @@ struct AccountSheet: View {
                 }
                 Button("Cancel", role: .cancel) {}
             } message: {
-                Text("You'll be signed out and asked for a company code. Any call in progress will end.")
+                Text("You'll be signed out and asked for your work email or mobile number. Any call in progress will end.")
             }
         }
     }

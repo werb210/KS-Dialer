@@ -89,4 +89,58 @@ final class KeystoneCompanyTests: XCTestCase {
         XCTAssertEqual(WatchPayload.decode(WatchEnrollMessage.self, from: legacy, key: WatchPayload.enrollKey)?.oneTimeCode,
                        "12345678")
     }
+
+    // MARK: KS_STAFF_DIRECTORY_v1 - find the company from a work email or mobile number
+
+    func testIdentifiersAreNormalisedLikeKSOps() {
+        XCTAssertEqual(CompanyStore.normalizedIdentifier("  Nora@NorthWind.Example "), "nora@northwind.example")
+        XCTAssertEqual(CompanyStore.normalizedIdentifier("(403) 555-0199"), "+14035550199")
+        XCTAssertEqual(CompanyStore.normalizedIdentifier("+1 403 555 0199"), "+14035550199")
+        XCTAssertNil(CompanyStore.normalizedIdentifier("555-0199"))
+        XCTAssertNil(CompanyStore.normalizedIdentifier("nora@"))
+        XCTAssertNil(CompanyStore.normalizedIdentifier("acme-capital"))
+        XCTAssertEqual(CompanyStore.phoneIdentifier("403.555.0199"), "+14035550199")
+        XCTAssertNil(CompanyStore.phoneIdentifier("nora@northwind.example"))
+    }
+
+    func testStaffLookupGoesToTheOpsDirectory() {
+        XCTAssertEqual(CompanyStore.staffLookupURL?.path, "/api/staff-directory/lookup")
+        XCTAssertEqual(CompanyStore.staffLookupURL?.scheme, "https")
+    }
+
+    func testStaffLookupResponseDecodesAndDropsInsecureServers() throws {
+        let json = ##"{"matches":[{"name":"Alpha Capital","server_url":"https://ks-alpha.example.com"},{"name":"Bad","server_url":"http://bad.example.com"},{"name":"Beta Funding","server_url":"https://ks-beta.example.com"}]}"##
+        let matches = try CompanyStore.decodeStaffLookupResponse(data: Data(json.utf8), statusCode: 200)
+        XCTAssertEqual(matches.map(\.name), ["Alpha Capital", "Beta Funding"])
+        XCTAssertEqual(try CompanyStore.decodeStaffLookupResponse(data: Data(#"{"matches":[]}"#.utf8), statusCode: 200), [])
+        XCTAssertThrowsError(try CompanyStore.decodeStaffLookupResponse(data: Data("{}".utf8), statusCode: 429)) {
+            XCTAssertEqual($0 as? StaffLookupError, .rateLimited)
+        }
+        XCTAssertThrowsError(try CompanyStore.decodeStaffLookupResponse(data: Data("oops".utf8), statusCode: 500)) {
+            XCTAssertEqual($0 as? StaffLookupError, .unavailable)
+        }
+    }
+
+    func testAMatchBecomesTheStoredCompanyWithTheServersBranding() throws {
+        let match = StaffDirectoryMatch(name: "Alpha Capital", serverURL: "https://ks-alpha.example.com")
+        let licensee = try JSONDecoder().decode(PublicLicensee.self, from: Data(##"{"company_name":"Alpha","logo_url":"https://cdn.example.com/a.png","primary_color":"#123456","urls":{"portal":"https://staff.alpha.example.com"}}"##.utf8))
+        let profile = CompanyStore.profile(for: match, licensee: licensee)
+        XCTAssertEqual(profile.companyName, "Alpha Capital")
+        XCTAssertEqual(profile.apiBaseURL, "https://ks-alpha.example.com/api")
+        XCTAssertEqual(profile.portalURL, "https://staff.alpha.example.com")
+        XCTAssertEqual(profile.primaryColor, "#123456")
+        XCTAssertEqual(profile.logoURL, "https://cdn.example.com/a.png")
+        let bare = CompanyStore.profile(for: match, licensee: nil)
+        XCTAssertEqual(bare.companyName, "Alpha Capital")
+        XCTAssertNil(bare.portalURL)
+        CompanyStore.save(profile)
+        XCTAssertEqual(APIConfig.BASE_URL, "https://ks-alpha.example.com/api")
+    }
+
+    func testStaffLookupMessagesAreReadable() {
+        for error in [StaffLookupError.invalidIdentifier, .rateLimited, .offline, .unavailable] {
+            XCTAssertFalse(error.message.isEmpty)
+            XCTAssertFalse(error.message.lowercased().contains("company code"))
+        }
+    }
 }
