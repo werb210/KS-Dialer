@@ -127,7 +127,8 @@ public class DialerRulesTest {
 
     @Test
     public void timesAreShortAndLocal() {
-        ZoneId edmonton = ZoneId.of("America/Edmonton");
+        // A fixed offset (Mountain Standard Time), so the result never depends on the machine's time-zone database.
+        ZoneId edmonton = ZoneId.of("-07:00");
         LocalDate today = LocalDate.of(2026, 11, 4);
         assertEquals("2:05 PM", TimeText.shortText("2026-11-04T21:05:00Z", edmonton, today));
         assertEquals("Mon 9:00 AM", TimeText.shortText("2026-11-02T16:00:00.000Z", edmonton, today));
