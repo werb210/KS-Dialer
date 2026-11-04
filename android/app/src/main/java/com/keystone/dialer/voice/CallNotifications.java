@@ -32,7 +32,7 @@ public final class CallNotifications {
 
     private CallNotifications() { }
 
-    static void ensureChannels(Context c) {
+    public static void ensureChannels(Context c) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
         NotificationManager nm = c.getSystemService(NotificationManager.class);
         if (nm == null) return;

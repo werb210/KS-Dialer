@@ -32,6 +32,14 @@ public final class AlertRules {
         return "messages";
     }
 
+    /**
+     * The staff portal app gets the same alerts. The dialler draws calls and messages; tasks are left to the portal
+     * (the dialler has no task list), so a phone with both apps never shows an alert twice.
+     */
+    public static boolean drawsHere(@Nullable String category) {
+        return !"TASK".equals(category);
+    }
+
     /** "Call back" only on a missed call or voicemail that came with a proper E.164 number. */
     public static boolean offersCallBack(@Nullable String category, @Nullable String phone) {
         return ("MISSED_CALL".equals(category) || "VOICEMAIL".equals(category))

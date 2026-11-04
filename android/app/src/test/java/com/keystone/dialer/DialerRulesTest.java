@@ -106,6 +106,9 @@ public class DialerRulesTest {
         assertFalse(AlertRules.offersCallBack("SMS", "+14035550199"));
         assertFalse(AlertRules.offersCallBack("MISSED_CALL", "4035550199"));
         assertFalse(AlertRules.offersCallBack("MISSED_CALL", "javascript:alert(1)"));
+        assertTrue(AlertRules.drawsHere("MISSED_CALL"));
+        assertTrue(AlertRules.drawsHere("SMS"));
+        assertFalse(AlertRules.drawsHere("TASK")); // the staff portal app shows tasks
         assertEquals("calls", AlertRules.channelKind("VOICEMAIL"));
         assertEquals("tasks", AlertRules.channelKind("TASK"));
         assertEquals("messages", AlertRules.channelKind("SMS"));

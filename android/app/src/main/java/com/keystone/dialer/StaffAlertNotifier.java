@@ -59,6 +59,7 @@ public final class StaffAlertNotifier {
         String body = value(data, "body");
         if (title.isEmpty() && body.isEmpty()) return;
         String category = value(data, "categoryId");
+        if (!AlertRules.drawsHere(category)) return;
         String phone = value(data, "phone");
         int id = (value(data, "type") + ":" + (value(data, "contactId").isEmpty() ? phone : value(data, "contactId"))).hashCode();
         ensureChannels(c);
