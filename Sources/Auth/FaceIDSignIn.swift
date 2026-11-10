@@ -18,7 +18,7 @@ enum FaceIDSignInError: Error {
 final class FaceIDSignIn: Sendable {
     static let shared = FaceIDSignIn()
 
-    private let service = "com.keystone.dialer.faceid"
+    private let service = "com.keystonecrm.dialer.faceid"
     private let account = "device-sign-in-secret"
     private let credentialIdKey = "keystone.faceid.credentialId"
     private let offeredKey = "keystone.faceid.offered"

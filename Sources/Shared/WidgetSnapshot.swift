@@ -15,7 +15,7 @@ struct WidgetSnapshot: Codable, Equatable {
 
 enum WidgetSnapshotStore {
     // KEYSTONE_CONFIG_v1 - from KS_APP_GROUP in Config/Keystone.xcconfig, via each target's Info.plist.
-    static let appGroup = (Bundle.main.object(forInfoDictionaryKey: "KSAppGroupIdentifier") as? String) ?? "group.com.keystone.dialer"
+    static let appGroup = (Bundle.main.object(forInfoDictionaryKey: "KSAppGroupIdentifier") as? String) ?? "group.com.keystonecrm.dialer"
     private static let snapshotKey = "widget.recentContacts.v1"
 
     static func load() -> WidgetSnapshot {

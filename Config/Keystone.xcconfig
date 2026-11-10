@@ -2,18 +2,18 @@
 //
 // project.yml lists this file under configFiles (Debug and Release), so every target reads these settings:
 // bundle ids, the App Group in each entitlements file and Info.plist, display names, the KS-Ops URL and the team.
-// The values below are placeholders. Replace them once the company's Apple Developer account exists (see README,
-// "Keystone setup"), then run `xcodegen generate`. Nothing else in the repo needs to change.
+// KS_DIALER_STORE_IDENTITY_v1 - real values: the company Apple team (same as the Keystone iPad portal,
+// com.keystonecrm.portal) and the live KS-Ops address. Run `xcodegen generate` after changing them.
 //
 // Note: "//" starts a comment in an .xcconfig, so URLs are written https:/$()/host ($() expands to nothing).
 
 // iPhone app bundle id. The extensions and the Watch app are derived from it:
 //   $(KS_APP_BUNDLE_ID).watchkitapp, .watchkitapp.widget, .liveactivity, .calldirectory, .notificationservice
-KS_APP_BUNDLE_ID = com.keystone.dialer
+KS_APP_BUNDLE_ID = com.keystonecrm.dialer
 
 // App Group shared by the app, widgets, Live Activity, Call Directory and the Watch app (register it in the
 // Apple Developer portal and add it to every App ID above).
-KS_APP_GROUP = group.com.keystone.dialer
+KS_APP_GROUP = group.com.keystonecrm.dialer
 
 // Home-screen name of the iPhone app (also used in the permission prompts), and the short name used for the
 // Watch app, the widgets and the notification extension.
@@ -21,8 +21,8 @@ KS_APP_DISPLAY_NAME = Keystone Dialer
 KS_SHORT_NAME = Dialer
 
 // KS-Ops: resolves a company code to the company's own KS-server (GET {KS_OPS_URL}/api/directory/{code}).
-KS_OPS_URL = https:/$()/ops.keystone.example
+KS_OPS_URL = https:/$()/ks-ops-dev.azurewebsites.net
 
 // Apple Developer team id (10 characters, Membership details in the Apple Developer portal). Empty builds unsigned
 // for the simulator (CI). The "Upload iOS build" workflow reads this line.
-DEVELOPMENT_TEAM =
+DEVELOPMENT_TEAM = 76VAY7UJKJ

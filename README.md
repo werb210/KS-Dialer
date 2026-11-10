@@ -41,8 +41,8 @@ The committed values are placeholders.
 
 | Setting | Placeholder | What it is |
 | --- | --- | --- |
-| `KS_APP_BUNDLE_ID` | `com.keystone.dialer` | iPhone app bundle id. The others are derived: `.watchkitapp`, `.watchkitapp.widget`, `.liveactivity`, `.calldirectory`, `.notificationservice` |
-| `KS_APP_GROUP` | `group.com.keystone.dialer` | App Group in every entitlements file and in each target's `KSAppGroupIdentifier` Info.plist key |
+| `KS_APP_BUNDLE_ID` | `com.keystonecrm.dialer` | iPhone app bundle id. The others are derived: `.watchkitapp`, `.watchkitapp.widget`, `.liveactivity`, `.calldirectory`, `.notificationservice` |
+| `KS_APP_GROUP` | `group.com.keystonecrm.dialer` | App Group in every entitlements file and in each target's `KSAppGroupIdentifier` Info.plist key |
 | `KS_APP_DISPLAY_NAME` | `Keystone Dialer` | Home-screen name, permission prompts, Caller ID extension name |
 | `KS_SHORT_NAME` | `Dialer` | Watch app, widgets, Live Activity and notification extension names |
 | `KS_OPS_URL` | `https:/$()/ops.keystone.example` | KS-Ops base URL (`//` starts a comment in an xcconfig, hence `$()`) |

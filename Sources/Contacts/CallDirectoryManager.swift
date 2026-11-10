@@ -8,7 +8,7 @@ final class CallDirectoryManager: ObservableObject {
     static let shared = CallDirectoryManager()
     // KEYSTONE_CONFIG_v1 - $(KS_APP_BUNDLE_ID).calldirectory, from Config/Keystone.xcconfig via the app's Info.plist.
     static let extensionIdentifier = (Bundle.main.object(forInfoDictionaryKey: "KSCallDirectoryExtensionIdentifier") as? String)
-        ?? "com.keystone.dialer.calldirectory"
+        ?? "com.keystonecrm.dialer.calldirectory"
 
     @Published private(set) var enabledStatus: CXCallDirectoryManager.EnabledStatus = .unknown
 

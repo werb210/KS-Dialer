@@ -134,8 +134,8 @@ public enum CompanyStore {
     static let profileKey = "keystone.company.v1"
     /// Watch only: the API base URL the iPhone sent with the link code.
     static let watchAPIBaseKey = "keystone.company.apiBaseURL.v1"
-    static let defaultOpsURL = "https://ops.keystone.example"
-    static let fallbackAppGroup = "group.com.keystone.dialer"
+    static let defaultOpsURL = "https://ks-ops-dev.azurewebsites.net"
+    static let fallbackAppGroup = "group.com.keystonecrm.dialer"
 
     /// The App Group shared with the widgets and extensions (KSAppGroupIdentifier in each target's Info.plist,
     /// from KS_APP_GROUP in Config/Keystone.xcconfig).
