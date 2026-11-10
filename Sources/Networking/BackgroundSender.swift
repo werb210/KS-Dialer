@@ -8,7 +8,7 @@ import Foundation
 // queue to read back the next time the app opens.
 final class BackgroundSender: NSObject, URLSessionTaskDelegate {
     static let shared = BackgroundSender()
-    static let sessionIdentifier = "com.keystone.dialer.background-send"
+    static let sessionIdentifier = "com.keystonecrm.dialer.background-send"
     var systemCompletion: (() -> Void)?
 
     private let resultsKey = "keystone.dialer.backgroundSend.results"

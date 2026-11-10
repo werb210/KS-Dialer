@@ -6,7 +6,7 @@ import UniformTypeIdentifiers
 
 // BOREAL_DIALER_v593_SPOTLIGHT
 enum ContactSpotlight {
-    static let domain = "com.keystone.dialer.contacts"
+    static let domain = "com.keystonecrm.dialer.contacts"
     static let prefix = "keystone.contact|"
 
     static func identifier(phone: String, id: String) -> String { prefix + phone + "|" + id }

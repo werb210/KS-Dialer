@@ -133,7 +133,7 @@ final class KeychainService {
         if complete { defaults.set(true, forKey: Self.migrationKey) }
     }
 
-    private static let logger = Logger(subsystem: "com.keystone.dialer", category: "keychain")
+    private static let logger = Logger(subsystem: "com.keystonecrm.dialer", category: "keychain")
 
     private static func log(_ operation: String, status: OSStatus, key: String) {
         // Logged in release too: a failed save is a silent sign-out later.

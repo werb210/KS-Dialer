@@ -7,7 +7,7 @@ struct CallDirectoryEntry: Codable, Equatable {
 
 enum CallDirectoryStore {
     // KEYSTONE_CONFIG_v1 - from KS_APP_GROUP in Config/Keystone.xcconfig, via each target's Info.plist.
-    static let appGroupIdentifier = (Bundle.main.object(forInfoDictionaryKey: "KSAppGroupIdentifier") as? String) ?? "group.com.keystone.dialer"
+    static let appGroupIdentifier = (Bundle.main.object(forInfoDictionaryKey: "KSAppGroupIdentifier") as? String) ?? "group.com.keystonecrm.dialer"
     private static let fileName = "caller-directory-v1.json"
 
     static func entries() -> [CallDirectoryEntry] {

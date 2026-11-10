@@ -75,7 +75,7 @@ enum StaffWidgetActionStore {
 }
 
 enum StaffWidgetActionKinds {
-    static let busyControl = "com.keystone.dialer.control.busy"
+    static let busyControl = "com.keystonecrm.dialer.control.busy"
 }
 
 /// Set by the app at launch. Nil inside the widget extension.
