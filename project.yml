@@ -155,7 +155,9 @@ targets:
         # BOREAL_DIALER_v822_CARPLAY - CarPlay Communication App (assigned by Apple Oct 17 2026), Siri messaging, and
         # communication notifications (Siri reads texts aloud). Enable CarPlay Communication, SiriKit and
         # Communication Notifications on the app's App ID (CarPlay needs Apple's approval for the new App ID).
-        com.apple.developer.carplay-communication: true
+        # KS_DIALER_CARPLAY_PENDING - CarPlay Communication is left out until Apple grants it for this App ID
+        # (signing fails with it). Add "com.apple.developer.carplay-communication: true" back here and in
+        # Config/BorealDialer.entitlements once it is granted.
         com.apple.developer.siri: true
         com.apple.developer.usernotifications.communication: true
     attributes:
