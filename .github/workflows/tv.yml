@@ -65,6 +65,13 @@ jobs:
           done
           shot -demo -demoSlide leaderboard -demoCelebrate; sleep 1; xcrun simctl io "$UDID" screenshot "$RUNNER_TEMP/shots/2-deal-funded.png"
           ls -la "$RUNNER_TEMP/shots"
+      # Small copies in the log too, for reviewers who cannot download artifacts.
+      - name: Screenshots in the log
+        run: |
+          for f in "$RUNNER_TEMP"/shots/*.png; do
+            sips -Z 1280 -s format jpeg -s formatOptions 70 "$f" --out "${f%.png}.jpg" >/dev/null
+            echo "SHOT-BEGIN $(basename "${f%.png}")"; base64 -i "${f%.png}.jpg" | fold -w 4000; echo "SHOT-END"
+          done
       - uses: actions/upload-artifact@v4
         if: always()
         with:
