@@ -1,0 +1,92 @@
+name: Upload Apple TV build
+
+# KEYSTONE_TV_v1 - archives the Apple TV scoreboard app (TV/) signed with the company team and uploads it to App Store
+# Connect (TestFlight). Uses the same App Store Connect key secrets as "Upload iOS build". The app's record
+# (bundle id com.keystonecrm.tv, see TV/Config/TV.xcconfig) must exist in App Store Connect first.
+on:
+  workflow_dispatch:
+    inputs:
+      notes:
+        description: "What changed (shown in the run summary only)"
+        required: false
+        default: ""
+
+concurrency:
+  group: tv-upload
+  cancel-in-progress: false
+
+jobs:
+  upload:
+    runs-on: macos-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: TV
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: "1"
+      HOMEBREW_NO_INSTALL_CLEANUP: "1"
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+    steps:
+      - name: Check the App Store Connect key is set up
+        working-directory: .
+        run: |
+          missing=""
+          [ -n "$ASC_KEY_ID" ] || missing="$missing ASC_KEY_ID"
+          [ -n "$ASC_ISSUER_ID" ] || missing="$missing ASC_ISSUER_ID"
+          [ -n "$ASC_KEY_P8" ] || missing="$missing ASC_KEY_P8"
+          if [ -n "$missing" ]; then echo "::error::Missing repository secrets:$missing"; exit 1; fi
+      - run: echo "BUILD_NUMBER=$((1000 + GITHUB_RUN_NUMBER))" >> "$GITHUB_ENV"
+      - uses: actions/checkout@v5
+      - name: Read the signing team from TV/Config/TV.xcconfig
+        run: |
+          team="$(sed -n 's/^DEVELOPMENT_TEAM[[:space:]]*=[[:space:]]*\([A-Z0-9]*\).*/\1/p' Config/TV.xcconfig | head -n1)"
+          [ -n "$team" ] || { echo "::error::Set DEVELOPMENT_TEAM in TV/Config/TV.xcconfig"; exit 1; }
+          echo "TEAM_ID=$team" >> "$GITHUB_ENV"
+          cp ../Config/ci/ExportOptions.plist "$RUNNER_TEMP/ExportOptions.plist"
+          plutil -replace teamID -string "$team" "$RUNNER_TEMP/ExportOptions.plist"
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+      - run: brew install xcodegen
+      - run: xcodegen generate
+      - name: Install the App Store Connect key
+        run: |
+          mkdir -p "$RUNNER_TEMP/asc"
+          printf '%s' "$ASC_KEY_P8" > "$RUNNER_TEMP/asc/AuthKey_${ASC_KEY_ID}.p8"
+          chmod 600 "$RUNNER_TEMP/asc/AuthKey_${ASC_KEY_ID}.p8"
+      - name: Archive (signed with the company team)
+        run: >-
+          xcodebuild archive
+          -project KeystoneTV.xcodeproj -scheme KeystoneTV -configuration Release
+          -destination 'generic/platform=tvOS'
+          -archivePath "$RUNNER_TEMP/KeystoneTV.xcarchive"
+          -allowProvisioningUpdates
+          -authenticationKeyPath "$RUNNER_TEMP/asc/AuthKey_${ASC_KEY_ID}.p8"
+          -authenticationKeyID "$ASC_KEY_ID"
+          -authenticationKeyIssuerID "$ASC_ISSUER_ID"
+          DEVELOPMENT_TEAM="$TEAM_ID" CODE_SIGN_STYLE=Automatic CURRENT_PROJECT_VERSION="$BUILD_NUMBER"
+      - name: Upload to App Store Connect
+        run: >-
+          xcodebuild -exportArchive
+          -archivePath "$RUNNER_TEMP/KeystoneTV.xcarchive"
+          -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist"
+          -exportPath "$RUNNER_TEMP/export"
+          -allowProvisioningUpdates
+          -authenticationKeyPath "$RUNNER_TEMP/asc/AuthKey_${ASC_KEY_ID}.p8"
+          -authenticationKeyID "$ASC_KEY_ID"
+          -authenticationKeyIssuerID "$ASC_ISSUER_ID"
+      - name: Summary
+        if: success()
+        env:
+          NOTES: ${{ inputs.notes }}
+        run: |
+          {
+            echo "### Uploaded to App Store Connect (TestFlight)"
+            echo "- App: Keystone TV (Apple TV), team $TEAM_ID, build $BUILD_NUMBER"
+            echo "- Notes: ${NOTES:-none}"
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Remove the key
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/asc"
