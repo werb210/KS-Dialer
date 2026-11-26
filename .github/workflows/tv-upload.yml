@@ -37,8 +37,8 @@ jobs:
           [ -n "$ASC_ISSUER_ID" ] || missing="$missing ASC_ISSUER_ID"
           [ -n "$ASC_KEY_P8" ] || missing="$missing ASC_KEY_P8"
           if [ -n "$missing" ]; then echo "::error::Missing repository secrets:$missing"; exit 1; fi
-      - run: echo "BUILD_NUMBER=$((1000 + GITHUB_RUN_NUMBER))" >> "$GITHUB_ENV"
       - uses: actions/checkout@v5
+      - run: echo "BUILD_NUMBER=$((1000 + GITHUB_RUN_NUMBER))" >> "$GITHUB_ENV"
       - name: Read the signing team from TV/Config/TV.xcconfig
         run: |
           team="$(sed -n 's/^DEVELOPMENT_TEAM[[:space:]]*=[[:space:]]*\([A-Z0-9]*\).*/\1/p' Config/TV.xcconfig | head -n1)"
@@ -89,4 +89,5 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
       - name: Remove the key
         if: always()
+        working-directory: .
         run: rm -rf "$RUNNER_TEMP/asc"
