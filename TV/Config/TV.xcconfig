@@ -1,0 +1,8 @@
+// KEYSTONE_TV_v1 - the Apple TV scoreboard app's identity. One App Store app for every Keystone brokerage (and Boreal
+// Financial): the TV pairs with a code from KS-Ops and then talks only to its brokerage's own server.
+// "//" starts a comment in an .xcconfig, so URLs are written https:/$()/host ($() expands to nothing).
+KS_TV_BUNDLE_ID = com.keystonecrm.tv
+KS_TV_DISPLAY_NAME = Keystone TV
+KS_OPS_URL = https:/$()/ks-ops-dev.azurewebsites.net
+// Same Apple team as KS-Dialer and the Keystone iPad portal. The "Upload Apple TV build" workflow reads this line.
+DEVELOPMENT_TEAM = 76VAY7UJKJ

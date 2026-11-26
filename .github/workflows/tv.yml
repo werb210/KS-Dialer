@@ -1,0 +1,80 @@
+name: Apple TV
+
+# KEYSTONE_TV_v1 - builds and tests the Apple TV scoreboard app (TV/), then takes a screenshot of each screen with the
+# sample data (launch argument -demo) so a change can be seen without an Apple TV. Screenshots are a run artifact.
+on:
+  pull_request:
+    paths: ["TV/**", ".github/workflows/tv.yml", ".github/workflows/tv-upload.yml"]
+  push:
+    branches: [main]
+    paths: ["TV/**", ".github/workflows/tv.yml"]
+  workflow_dispatch:
+
+concurrency:
+  group: tv-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: TV
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: "1"
+      HOMEBREW_NO_INSTALL_CLEANUP: "1"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+      - run: brew install xcodegen
+      - run: xcodegen generate
+      - name: Apple TV simulator
+        id: sim
+        run: echo "udid=$(bash ci-simulator.sh)" >> "$GITHUB_OUTPUT"
+      - name: Build and test
+        run: >-
+          set -o pipefail &&
+          xcodebuild test
+          -project KeystoneTV.xcodeproj -scheme KeystoneTV
+          -destination "id=${{ steps.sim.outputs.udid }}"
+          -derivedDataPath "$RUNNER_TEMP/dd"
+          CODE_SIGNING_ALLOWED=NO DEVELOPMENT_TEAM=""
+          | tee "$RUNNER_TEMP/test.log" | grep -E "error:|warning: .*KeystoneTV|Test Case|TEST (SUCCEEDED|FAILED)|\*\* " || true;
+          grep -q "TEST SUCCEEDED" "$RUNNER_TEMP/test.log" || { tail -80 "$RUNNER_TEMP/test.log"; exit 1; }
+      - name: Screenshots of every screen (sample data)
+        run: |
+          set -euo pipefail
+          UDID="${{ steps.sim.outputs.udid }}"
+          APP="$(find "$RUNNER_TEMP/dd/Build/Products" -name KeystoneTV.app -path '*appletvsimulator*' | head -1)"
+          BID="$(/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' "$APP/Info.plist")"
+          xcrun simctl boot "$UDID" 2>/dev/null || true
+          xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl install "$UDID" "$APP"
+          mkdir -p "$RUNNER_TEMP/shots"
+          shot() {
+            xcrun simctl terminate "$UDID" "$BID" 2>/dev/null || true
+            xcrun simctl launch "$UDID" "$BID" "$@" >/dev/null
+            sleep 6
+          }
+          shot -demoPairing; xcrun simctl io "$UDID" screenshot "$RUNNER_TEMP/shots/0-pairing.png"
+          for s in leaderboard teams goal recent deals; do
+            shot -demo -demoSlide "$s"; xcrun simctl io "$UDID" screenshot "$RUNNER_TEMP/shots/1-$s.png"
+          done
+          shot -demo -demoSlide leaderboard -demoCelebrate; sleep 1; xcrun simctl io "$UDID" screenshot "$RUNNER_TEMP/shots/2-deal-funded.png"
+          ls -la "$RUNNER_TEMP/shots"
+      # Small copies in the log too, for reviewers who cannot download artifacts.
+      - name: Screenshots in the log
+        run: |
+          for f in "$RUNNER_TEMP"/shots/*.png; do
+            sips -Z 1280 -s format jpeg -s formatOptions 70 "$f" --out "${f%.png}.jpg" >/dev/null
+            echo "SHOT-BEGIN $(basename "${f%.png}")"; base64 -i "${f%.png}.jpg" | fold -w 4000; echo "SHOT-END"
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tv-screenshots
+          path: ${{ runner.temp }}/shots
+          if-no-files-found: ignore
