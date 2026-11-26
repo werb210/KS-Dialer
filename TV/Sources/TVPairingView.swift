@@ -82,6 +82,10 @@ struct TVPairingView: View {
                 Text(pairing.problem ?? "A new code appears every few minutes.")
                     .font(.system(size: 28)).foregroundStyle(pairing.problem == nil ? TVTheme.muted : TVTheme.down)
                     .multilineTextAlignment(.center)
+                // KEYSTONE_TV_REVIEW_DEMO_v1 - try the scoreboard with sample data before pairing (and for App Review).
+                Button("See a demo") { model.demo = true }
+                    .font(.system(size: 30, weight: .semibold))
+                    .padding(.top, 12)
             }
         }
         .padding(100)

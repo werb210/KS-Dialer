@@ -110,7 +110,18 @@ struct TVBoardView: View {
         .animation(.spring(response: 0.6, dampingFraction: 0.8), value: vm.celebrating)
         .onAppear { vm.start(pairing: pairing) { model.unpair() } }
         .onDisappear { vm.stop() }
-        .onPlayPauseCommand { menu = true }
+        .overlay(alignment: .bottom) {
+            // KEYSTONE_TV_REVIEW_DEMO_v1 - the demo says it is sample data, and Menu goes back to pairing.
+            if pairing == nil && !TVDemo.isOn {
+                Text("Sample data. Press Menu to go back and pair this TV.")
+                    .font(.system(size: 26, weight: .medium)).foregroundStyle(TVTheme.muted)
+                    .padding(.horizontal, 28).padding(.vertical, 12)
+                    .background(Capsule().fill(TVTheme.panel))
+                    .padding(.bottom, 24)
+            }
+        }
+        .onExitCommand(perform: pairing == nil && !TVDemo.isOn ? { model.demo = false } : nil)
+        .onPlayPauseCommand { if pairing != nil { menu = true } }
         .confirmationDialog(vm.board?.screen?.name ?? "This TV", isPresented: $menu) {
             Button("Unpair this TV", role: .destructive) { model.unpair() }
             Button("Cancel", role: .cancel) {}
