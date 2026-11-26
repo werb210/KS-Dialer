@@ -100,13 +100,13 @@ struct TVBrokerRow: View {
                 Text(broker.name).font(.system(size: 34, weight: .semibold)).foregroundStyle(TVTheme.text).lineLimit(1)
                 if let team = broker.team { Text(team).font(.system(size: 22)).foregroundStyle(TVTheme.muted).lineLimit(1) }
             }
-            .frame(width: 520, alignment: .leading)
+            .frame(width: 440, alignment: .leading)
             if !byDeals, let p = TVFormat.percent(broker.volume, of: broker.goal) {
                 VStack(alignment: .leading, spacing: 6) {
                     TVProgressBar(fraction: Double(p) / 100, accent: accent)
-                    Text("\(p)% of \(TVFormat.short(broker.goal ?? 0)) goal").font(.system(size: 22)).foregroundStyle(TVTheme.muted)
+                    Text("\(p)% of \(TVFormat.short(broker.goal ?? 0)) goal").font(.system(size: 22)).foregroundStyle(TVTheme.muted).lineLimit(1).fixedSize()
                 }
-                .frame(maxWidth: .infinity)
+                .frame(minWidth: 300, maxWidth: .infinity)
             } else {
                 Spacer()
             }

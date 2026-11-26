@@ -57,7 +57,7 @@ struct TVPairingView: View {
     @StateObject private var pairing = TVPairingModel()
 
     var body: some View {
-        HStack(spacing: 120) {
+        HStack(spacing: 80) {
             VStack(alignment: .leading, spacing: 28) {
                 Text("Keystone TV").font(.system(size: 44, weight: .semibold)).foregroundStyle(TVTheme.muted)
                 Text("Put your sales\nscoreboard on this TV").font(.system(size: 76, weight: .bold)).foregroundStyle(TVTheme.text)
@@ -93,7 +93,7 @@ struct TVPairingView: View {
         HStack(alignment: .firstTextBaseline, spacing: 20) {
             Text("\(n)").font(.system(size: 34, weight: .bold)).foregroundStyle(TVTheme.background)
                 .frame(width: 54, height: 54).background(Circle().fill(TVTheme.defaultAccent))
-            Text(text).font(.system(size: 36)).foregroundStyle(TVTheme.text)
+            Text(text).font(.system(size: 34)).foregroundStyle(TVTheme.text).lineLimit(2).fixedSize(horizontal: false, vertical: true)
         }
     }
 }
