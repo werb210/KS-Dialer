@@ -73,7 +73,7 @@ struct TVLeaderboardSlide: View {
             if rows.isEmpty {
                 TVEmpty(text: "No funded deals yet this month. The first one takes the top spot.")
             } else {
-                VStack(spacing: 14) {
+                VStack(spacing: 10) {
                     ForEach(rows) { row in
                         TVBrokerRow(rank: row.rank, broker: row.broker, accent: accent, currency: board.currency, byDeals: byDeals)
                     }
@@ -95,10 +95,10 @@ struct TVBrokerRow: View {
         HStack(spacing: 28) {
             Text("\(rank)").font(.system(size: 44, weight: .heavy)).foregroundStyle(TVTheme.medal(rank) ?? TVTheme.muted).frame(width: 70)
             if !byDeals { TVMovement(n: broker.movement) }
-            TVAvatar(initials: broker.initials, photoURL: broker.photo_url, size: 72, accent: accent)
+            TVAvatar(initials: broker.initials, photoURL: broker.photo_url, size: 60, accent: accent)
             VStack(alignment: .leading, spacing: 4) {
-                Text(broker.name).font(.system(size: 38, weight: .semibold)).foregroundStyle(TVTheme.text).lineLimit(1)
-                if let team = broker.team { Text(team).font(.system(size: 24)).foregroundStyle(TVTheme.muted).lineLimit(1) }
+                Text(broker.name).font(.system(size: 34, weight: .semibold)).foregroundStyle(TVTheme.text).lineLimit(1)
+                if let team = broker.team { Text(team).font(.system(size: 22)).foregroundStyle(TVTheme.muted).lineLimit(1) }
             }
             .frame(width: 520, alignment: .leading)
             if !byDeals, let p = TVFormat.percent(broker.volume, of: broker.goal) {
@@ -117,8 +117,8 @@ struct TVBrokerRow: View {
                 .font(.system(size: byDeals ? 32 : 44, weight: byDeals ? .medium : .heavy)).monospacedDigit()
                 .foregroundStyle(byDeals ? TVTheme.muted : TVTheme.text).frame(width: 330, alignment: .trailing)
         }
-        .padding(.horizontal, 30).padding(.vertical, 14)
-        .background(RoundedRectangle(cornerRadius: 22).fill(rank == 1 ? accent.opacity(0.22) : TVTheme.panel))
+        .padding(.horizontal, 30).padding(.vertical, 8)
+        .background(RoundedRectangle(cornerRadius: 20).fill(rank == 1 ? accent.opacity(0.22) : TVTheme.panel))
     }
 }
 

@@ -73,7 +73,8 @@ struct TVPairingView: View {
             VStack(spacing: 24) {
                 Text("Your code").font(.system(size: 36, weight: .medium)).foregroundStyle(TVTheme.muted)
                 Text(pairing.code.map(TVFormat.spacedCode) ?? "··· ···")
-                    .font(.system(size: 150, weight: .heavy, design: .monospaced))
+                    .font(.system(size: 130, weight: .heavy, design: .monospaced))
+                    .lineLimit(1).fixedSize()
                     .foregroundStyle(TVTheme.text)
                     .padding(.horizontal, 60).padding(.vertical, 36)
                     .background(RoundedRectangle(cornerRadius: 36).fill(TVTheme.panel))

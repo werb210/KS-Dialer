@@ -102,8 +102,9 @@ struct TVBoardView: View {
                     ProgressView().scaleEffect(2)
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .padding(.horizontal, 80).padding(.bottom, 50)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .clipped()
+            .padding(.horizontal, 80).padding(.bottom, 40)
         }
         .overlay { if let deal = vm.celebrating { TVCelebration(deal: deal, accent: accent, currency: vm.board?.currency ?? "CAD") } }
         .animation(.spring(response: 0.6, dampingFraction: 0.8), value: vm.celebrating)
@@ -140,7 +141,7 @@ struct TVBoardView: View {
             }
             .padding(.leading, 12)
         }
-        .padding(.horizontal, 80).padding(.top, 50).padding(.bottom, 30)
+        .padding(.horizontal, 80).padding(.top, 50).padding(.bottom, 20)
     }
 }
 
